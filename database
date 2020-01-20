@@ -1,0 +1,20 @@
+CREATE TABLE Aisles (
+[Dairy ] CHAR (50),
+Fruits CHAR (50),
+[Vegetables] CHAR (50),
+Nuts CHAR (50) ,
+Miscellaneous CHAR (50) ,
+Sauces CHAR (50) 
+);
+
+INSERT INTO Aisles (Dairy, Fruits , Vegetables, Nuts, Miscellaneous, Sauces)
+VALUES( Milk,Appe,Spinach,Almonds,Sponge,Tomato Sauce);
+
+INSERT INTO Aisles (Dairy, Fruits , Vegetables, Nuts, Miscellaneous, Sauces)
+VALUES(  Cheese, Blueberry, Pepper, Walnuts, Spatula, Mustard);
+
+INSERT INTO Aisles (Dairy, Fruits , Vegetables, Nuts, Miscellaneous, Sauces)
+VALUES( Yogurt, Grapes, Beans, Hazelnut, Pans, Mayo);
+
+INSERT INTO Aisles (Dairy, Fruits , Vegetables, Nuts, Miscellaneous, Sauces)
+VALUES(  Butter	, Orange, Turnips, Cashews, Pots, Romesco);
