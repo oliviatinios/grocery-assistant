@@ -21,12 +21,13 @@ import java.util.Locale;
 import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
-
+    private final String TAG = "MAIN_ACTIVITY";
     private final int MY_PERMISSIONS_RECORD_AUDIO = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
 
         // Establish connection to AWS
         AWSMobileClient.getInstance().initialize(this, new AWSStartupHandler() {
@@ -36,8 +37,7 @@ public class MainActivity extends AppCompatActivity {
             }
         }).execute();
 
-        setContentView(R.layout.activity_main);
-
+        // Get audio permissions from user
         requestAudioPermissions();
     }
 
@@ -46,12 +46,12 @@ public class MainActivity extends AppCompatActivity {
                 Manifest.permission.RECORD_AUDIO)
                 != PackageManager.PERMISSION_GRANTED) {
 
-            //When permission is not granted by user, show them message why this permission is needed.
+            // When permission is not granted by user, show them message why this permission is needed.
             if (ActivityCompat.shouldShowRequestPermissionRationale(this,
                     Manifest.permission.RECORD_AUDIO)) {
                 Toast.makeText(this, "Please grant permissions to record audio", Toast.LENGTH_LONG).show();
 
-                //Give user option to still opt-in the permissions
+                // Give user option to still opt-in the permissions
                 ActivityCompat.requestPermissions(this,
                         new String[]{Manifest.permission.RECORD_AUDIO},
                         MY_PERMISSIONS_RECORD_AUDIO);
@@ -63,13 +63,13 @@ public class MainActivity extends AppCompatActivity {
                         MY_PERMISSIONS_RECORD_AUDIO);
             }
         }
-        //If permission is granted, then go ahead recording audio
+        // If permission is granted, then go ahead recording audio
         else if (ContextCompat.checkSelfPermission(this,
                 Manifest.permission.RECORD_AUDIO)
                 == PackageManager.PERMISSION_GRANTED) {
 
             //Go ahead with recording audio now
-            init();
+            initInteractiveVoiceView();
         }
     }
 
@@ -81,19 +81,18 @@ public class MainActivity extends AppCompatActivity {
             case MY_PERMISSIONS_RECORD_AUDIO: {
                 if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    // permission was granted, yay!
-                    init();
+                    // Permission was granted
+                    initInteractiveVoiceView();
                 } else {
-                    // permission denied, boo! Disable the
-                    // functionality that depends on this permission.
-                    Toast.makeText(this, "Permissions Denied to record audio", Toast.LENGTH_LONG).show();
+                    // Permission denied
+                    Toast.makeText(this, "Permissions denied to record audio", Toast.LENGTH_LONG).show();
                 }
                 return;
             }
         }
     }
 
-    public void init(){
+    public void initInteractiveVoiceView(){
         InteractiveVoiceView voiceView =
                 (InteractiveVoiceView) findViewById(R.id.voiceInterface);
 
@@ -102,7 +101,7 @@ public class MainActivity extends AppCompatActivity {
 
                     @Override
                     public void dialogReadyForFulfillment(Map slots, String intent) {
-                        Log.d("MAIN_ACTIVITY", String.format(
+                        Log.d(TAG, String.format(
                                 Locale.US,
                                 "Dialog ready for fulfillment:\n\tIntent: %s\n\tSlots: %s",
                                 intent,
@@ -111,12 +110,13 @@ public class MainActivity extends AppCompatActivity {
 
                     @Override
                     public void onResponse(Response response) {
-                        Log.d("MAIN_ACTIVITY", "Bot response: " + response.getTextResponse());
+                        Log.d(TAG, "User input: " + response.getInputTranscript());
+                        Log.d(TAG, "Bot response: " + response.getTextResponse());
                     }
 
                     @Override
                     public void onError(String responseText, Exception e) {
-                        Log.e("MAIN_ACTIVITY", "Error: " + responseText, e);
+                        Log.e(TAG, "Error: " + responseText, e);
                     }
                 });
 
@@ -124,7 +124,8 @@ public class MainActivity extends AppCompatActivity {
 
         voiceView.getViewAdapter()
                 .setInteractionConfig(
-                        new InteractionConfig("GroceryAssistant","GroceryAssistant"));
+                        new InteractionConfig(getApplicationContext().getString(R.string.aws_bot_name),
+                                getApplicationContext().getString(R.string.aws_bot_alias)));
 
         voiceView.getViewAdapter()
                 .setAwsRegion(getApplicationContext()
