@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical"
+    android:background="#14273D">
+    
+    <TextView android:id="@+id/notification__title_label"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:gravity="center"
+        android:textSize="20dp"
+        android:textColor="#ffffff"/>
+    
+    <TextView android:id="@+id/notification__text_label"
+        android:layout_width="fill_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginTop="20dp"
+        android:layout_marginLeft="20dp"
+        android:layout_marginRight="20dp"
+        android:maxLines="30"
+        android:scrollbars="vertical"
+        android:scrollHorizontally="false"
+        android:ellipsize="none"
+        android:gravity="center|top"
+        android:lineSpacingExtra="4dp"
+        android:textSize="14dp"
+        android:textColor="#ffffff"/>
+
+    <Button android:id="@+id/notification__done_button"
+        android:layout_width="200dp"
+        android:layout_height="40dp"
+        android:layout_marginTop="20dp"
+        android:layout_marginBottom="30dp"
+        android:layout_gravity="center_horizontal"
+        android:background="@drawable/done_button"
+        android:onClick="onClose"
+        android:textSize="14dp"
+        android:textColor="#ffffff"
+        android:text="Done"/>
+    
+</LinearLayout>
