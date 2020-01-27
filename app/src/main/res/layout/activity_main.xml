@@ -48,15 +48,6 @@
                     android:textSize="20dp" />
             </LinearLayout>
 
-            <Button
-                android:id="@+id/btnA"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_centerHorizontal="true"
-                android:layout_centerVertical="true"
-                android:text="Item A"
-                android:visibility="visible" />
-
         </com.navigine.naviginesdk.LocationView>
         
         <TextView android:id="@+id/navigation__info_label"
@@ -102,6 +93,14 @@
                       android:background="#90dddddd"/>
 
             <!-- Next floor button -->
+            <Button
+                android:id="@+id/btnNav"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:onClick="onNav"
+                android:text="Nav" />
+
             <FrameLayout android:id="@+id/navigation__next_floor_view"
                          android:layout_width="wrap_content"
                          android:layout_height="wrap_content"

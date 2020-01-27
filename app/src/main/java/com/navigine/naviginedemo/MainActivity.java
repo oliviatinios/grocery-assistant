@@ -16,7 +16,7 @@ import com.navigine.naviginesdk.*;
 
 public class MainActivity extends Activity
 {
-  private static final String   TAG                     = "NAVIGINE.Demo";
+  private static final String   TAG                     = "GA";
   private static final String   NOTIFICATION_CHANNEL    = "NAVIGINE_DEMO_NOTIFICATION_CHANNEL";
   private static final int      UPDATE_TIMEOUT          = 100;  // milliseconds
   private static final int      ADJUST_TIMEOUT          = 5000; // milliseconds
@@ -174,14 +174,9 @@ public class MainActivity extends Activity
         notificationManager.createNotificationChannel(new NotificationChannel(NOTIFICATION_CHANNEL, "default",
                                                                               NotificationManager.IMPORTANCE_LOW));
     }
+
     // Initialize item button
-    Button btnA = (Button) findViewById(R.id.btnA);
-    btnA.setOnClickListener(new OnClickListener() {
-      @Override
-      public void onClick(View view) {
-        Log.i("GA", "ItemA");
-      }
-    });
+
   }
   
   @Override public void onDestroy()
@@ -232,6 +227,29 @@ public class MainActivity extends Activity
   {
     mLocationView.zoomBy(0.8f);
   }
+
+  // Wills code begin
+
+  public void onNav(View v) {
+    //458.00, 1421.00
+
+    if (mNavigation == null)
+      return;
+
+    SubLocation subLoc = mLocation.getSubLocations().get(mCurrentSubLocationIndex);
+
+    mTargetPoint  = new LocationPoint(mLocation.getId(), subLoc.getId(), 55.0f, 12.0f);
+    mTargetVenue  = null;
+    mPinPoint     = null;
+    mPinPointRect = null;
+
+    mNavigation.setTarget(mTargetPoint);
+    mBackView.setVisibility(View.VISIBLE);
+    mLocationView.redraw();
+
+  }
+
+  // Will end
 
   public void onMakeRoute(View v)
   {
@@ -320,10 +338,11 @@ public class MainActivity extends Activity
     
     mLocationView.redraw();
   }
-  
+
   private void handleLongClick(float x, float y)
   {
     Log.d(TAG, String.format(Locale.ENGLISH, "Long click at (%.2f, %.2f)", x, y));
+    Log.d("GA~~~~", mLocationView.getAbsCoordinates(x, y).toString());
     makePin(mLocationView.getAbsCoordinates(x, y));
     cancelVenue();
   }
@@ -583,6 +602,8 @@ public class MainActivity extends Activity
     
     if (mDeviceInfo == null || !mDeviceInfo.isValid())
       return;
+
+    //Log.d("GA", P.x);
 
     mPinPoint = new LocationPoint(mLocation.getId(), subLoc.getId(), P.x, P.y);
     mPinPointRect = new RectF();
@@ -955,7 +976,7 @@ public class MainActivity extends Activity
   {
     try
     {
-      final String extDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS).getAbsolutePath() + "/Navigine.Demo";
+      final String extDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS).getAbsolutePath() + "/GA";
       (new File(extDir)).mkdirs();
       if (!(new File(extDir)).exists())
         return null;
