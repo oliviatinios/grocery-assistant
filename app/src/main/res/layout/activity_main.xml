@@ -4,6 +4,15 @@
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     android:background="#14273D">
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
+
+    <com.amazonaws.mobileconnectors.lex.interactionkit.ui.InteractiveVoiceView
+        android:id="@+id/voiceInterface"
+        layout="@layout/voice_component"
+        android:layout_width="200dp"
+        android:layout_height="200dp"/>
 
     <!-- Main layout -->
     <FrameLayout android:id="@+id/navigation__main_layout"
