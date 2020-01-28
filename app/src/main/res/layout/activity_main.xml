@@ -8,12 +8,6 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-    <com.amazonaws.mobileconnectors.lex.interactionkit.ui.InteractiveVoiceView
-        android:id="@+id/voiceInterface"
-        layout="@layout/voice_component"
-        android:layout_width="200dp"
-        android:layout_height="200dp"/>
-
     <!-- Main layout -->
     <FrameLayout android:id="@+id/navigation__main_layout"
         android:layout_width="fill_parent"
@@ -22,6 +16,12 @@
         <com.navigine.naviginesdk.LocationView android:id="@+id/navigation__location_view"
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"/>
+
+        <com.amazonaws.mobileconnectors.lex.interactionkit.ui.InteractiveVoiceView
+            android:id="@+id/voiceInterface"
+            layout="@layout/voice_component"
+            android:layout_width="200dp"
+            android:layout_height="200dp"/>
 
         <TextView android:id="@+id/navigation__info_label"
             android:layout_width="wrap_content"
