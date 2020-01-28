@@ -20,6 +20,7 @@
         <com.amazonaws.mobileconnectors.lex.interactionkit.ui.InteractiveVoiceView
             android:id="@+id/voiceInterface"
             layout="@layout/voice_component"
+            android:layout_gravity="bottom|center"
             android:layout_width="200dp"
             android:layout_height="200dp"/>
 

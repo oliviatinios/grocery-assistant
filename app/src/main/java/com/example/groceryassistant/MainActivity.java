@@ -446,8 +446,12 @@ public class MainActivity extends Activity {
                 mBackView.setVisibility(View.GONE);
                 mLocationView.redraw();
 
-                textToSpeech.speak("You have arrived at the " + navItem.getName(), TextToSpeech.QUEUE_FLUSH, null);
-
+                if (navItem != null) {
+                    textToSpeech.speak("You have arrived at the " + navItem.getName(), TextToSpeech.QUEUE_FLUSH, null);
+                } else {
+                    textToSpeech.speak("You have arrived", TextToSpeech.QUEUE_FLUSH, null);
+                }
+                navItem = null;
                 Log.d(TAG, "Navigation Ended");
             }
         }
