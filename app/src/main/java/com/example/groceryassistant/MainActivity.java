@@ -18,6 +18,7 @@ import android.app.*;
 import android.content.*;
 import android.graphics.*;
 import android.os.*;
+import android.speech.tts.TextToSpeech;
 import android.view.*;
 import android.view.View.*;
 import android.widget.*;
@@ -80,14 +81,22 @@ public class MainActivity extends Activity {
     private RectF   mSelectedVenueRect = null;
     private Zone    mSelectedZone   = null;
 
+
+
     private final int MY_PERMISSIONS_RECORD_AUDIO = 1;
 
     // Declare a DynamoDBMapper object
     private DynamoDBMapper dynamoDBMapper;
 
+    // Text to speech
+    private TextToSpeech textToSpeech;
+    private Item navItem;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         Log.d(TAG, "MainActivity started");
+
         super.onCreate(savedInstanceState);
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.activity_main);
@@ -193,6 +202,15 @@ public class MainActivity extends Activity {
 
         connectToAws();
         requestAudioPermissions();
+
+        textToSpeech = new TextToSpeech(getApplicationContext(), new TextToSpeech.OnInitListener() {
+            @Override
+            public void onInit(int status) {
+                if(status != TextToSpeech.ERROR) {
+                    textToSpeech.setLanguage(Locale.CANADA);
+                }
+            }
+        });
     }
 
     @Override public void onDestroy()
@@ -406,6 +424,34 @@ public class MainActivity extends Activity {
 
     private void handleDeviceUpdate(DeviceInfo deviceInfo)
     {
+        // TO DO : Use path array to get the next turn
+        //float l = deviceInfo.getPaths().get(0).getLength();
+
+        if (!(mTargetPoint == null)) {
+
+        float dx = deviceInfo.getX() - mTargetPoint.getX();
+        float dy = deviceInfo.getY() - mTargetPoint.getY();
+        double d = Math.sqrt(Math.pow(dx,2) + Math.pow(dy,2));
+        Log.d(TAG, String.format("dx: %f, dy: %f, d: %f", dx, dy, d));
+
+
+            if (d < 1) {
+
+                mTargetPoint  = null;
+                mTargetVenue  = null;
+                mPinPoint     = null;
+                mPinPointRect = null;
+
+                mNavigation.cancelTargets();
+                mBackView.setVisibility(View.GONE);
+                mLocationView.redraw();
+
+                textToSpeech.speak("You have arrived at the " + navItem.getName(), TextToSpeech.QUEUE_FLUSH, null);
+
+                Log.d(TAG, "Navigation Ended");
+            }
+        }
+
         mDeviceInfo = deviceInfo;
         if (mDeviceInfo == null)
             return;
@@ -1046,7 +1092,9 @@ public class MainActivity extends Activity {
     private void getItem(DynamoDBMapper mapper, String name) throws Exception {
         Item item = mapper.load(Item.class, name);
         Log.d(TAG,item.toString());
-        onNav(item.getPositionX(), item.getPositionY());
+        navItem = item;
+        textToSpeech.speak("Calculating route to the "
+                + navItem.getName(), TextToSpeech.QUEUE_FLUSH, null);
     }
 
     public void initInteractiveVoiceView(){
@@ -1070,6 +1118,8 @@ public class MainActivity extends Activity {
                                 public void run() {
                                     try {
                                         getItem(dynamoDBMapper, shoppingListItem);
+                                        onNav(navItem.getPositionX(), navItem.getPositionY());
+
                                     }
                                     catch (Throwable t) {
                                         Log.d(TAG,"Could not retrieve item from DynamoDB: " + t);
