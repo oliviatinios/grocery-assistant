@@ -4,12 +4,15 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.mobile.client.AWSMobileClient;
 import com.amazonaws.mobile.client.AWSStartupHandler;
 import com.amazonaws.mobile.client.AWSStartupResult;
+import com.amazonaws.mobile.config.AWSConfiguration;
 import com.amazonaws.mobileconnectors.lex.interactionkit.Response;
 import com.amazonaws.mobileconnectors.lex.interactionkit.config.InteractionConfig;
 import com.amazonaws.mobileconnectors.lex.interactionkit.ui.InteractiveVoiceView;
+import com.amazonaws.mobileconnectors.dynamodbv2.dynamodbmapper.DynamoDBMapper;
 
 import android.app.*;
 import android.content.*;
@@ -32,6 +35,7 @@ import android.widget.Toast;
 import java.util.Locale;
 import java.util.Map;
 
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.navigine.naviginesdk.*;
 
 public class MainActivity extends Activity {
@@ -77,6 +81,9 @@ public class MainActivity extends Activity {
     private Zone    mSelectedZone   = null;
 
     private final int MY_PERMISSIONS_RECORD_AUDIO = 1;
+
+    // Declare a DynamoDBMapper object
+    private DynamoDBMapper dynamoDBMapper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -323,6 +330,24 @@ public class MainActivity extends Activity {
         }
 
         mLocationView.redraw();
+    }
+
+    public void onNav(float x, float y) {
+
+        if (mNavigation == null)
+            return;
+
+        SubLocation subLoc = mLocation.getSubLocations().get(mCurrentSubLocationIndex);
+
+        mTargetPoint  = new LocationPoint(mLocation.getId(), subLoc.getId(), x, y);
+        mTargetVenue  = null;
+        mPinPoint     = null;
+        mPinPointRect = null;
+
+        mNavigation.setTarget(mTargetPoint);
+        mBackView.setVisibility(View.VISIBLE);
+        mLocationView.redraw();
+
     }
 
     private void handleLongClick(float x, float y)
@@ -954,9 +979,16 @@ public class MainActivity extends Activity {
         AWSMobileClient.getInstance().initialize(this, new AWSStartupHandler() {
             @Override
             public void onComplete(AWSStartupResult awsStartupResult) {
-                Log.d("YourMainActivity", "AWSMobileClient is instantiated and you are connected to AWS!");
+                Log.d(TAG, "AWSMobileClient is instantiated and you are connected to AWS!");
             }
         }).execute();
+
+        // Instantiate a DynamoDB client
+        AmazonDynamoDBClient dynamoDBClient = new AmazonDynamoDBClient(AWSMobileClient.getInstance().getCredentialsProvider());
+        this.dynamoDBMapper = DynamoDBMapper.builder()
+                .dynamoDBClient(dynamoDBClient)
+                .awsConfiguration(AWSMobileClient.getInstance().getConfiguration())
+                .build();
     }
 
     private void requestAudioPermissions() {
@@ -1010,6 +1042,13 @@ public class MainActivity extends Activity {
         }
     }
 
+    // Reads item from DynamoDB
+    private void getItem(DynamoDBMapper mapper, String name) throws Exception {
+        Item item = mapper.load(Item.class, name);
+        Log.d(TAG,item.toString());
+        onNav(item.getPositionX(), item.getPositionY());
+    }
+
     public void initInteractiveVoiceView(){
         InteractiveVoiceView voiceView =
                 (InteractiveVoiceView) findViewById(R.id.voiceInterface);
@@ -1024,6 +1063,23 @@ public class MainActivity extends Activity {
                                 "Dialog ready for fulfillment:\n\tIntent: %s\n\tSlots: %s",
                                 intent,
                                 slots.toString()));
+                        final String shoppingListItem = slots.get("ShoppingList_Item").toString().toLowerCase();
+                        if (intent.equals("NavigateToItem")) {
+                            Log.d(TAG,"Handling NavigateToItem intent.");
+                            Runnable runnable = new Runnable() {
+                                public void run() {
+                                    try {
+                                        getItem(dynamoDBMapper, shoppingListItem);
+                                    }
+                                    catch (Throwable t) {
+                                        Log.d(TAG,"Could not retrieve item from DynamoDB: " + t);
+                                        t.printStackTrace();
+                                    }
+                                }
+                            };
+                            Thread mythread = new Thread(runnable);
+                            mythread.start();
+                        }
                     }
 
                     @Override
