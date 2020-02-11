@@ -20,10 +20,10 @@ public class Display {
     private View mAdjustModeView;
     private TextView mErrorMessageLabel;
 
-    public float mDisplayDensity = 0.0f;
+    float mDisplayDensity = 0.0f;
 
 
-    public Display(LocationView location, View back, View zIn, View zOut, View mode, TextView error) {
+    Display(LocationView location, View back, View zIn, View zOut, View mode, TextView error) {
         mLocationView = location;
         mBackView = back;
         mZoomInView  = zIn;
@@ -35,75 +35,76 @@ public class Display {
         mLocationView.setBackgroundColor(0xAA40E0D0);
     }
 
-    public void setBackVisibility(int visibility) {
+    void setBackVisibility(int visibility) {
         mBackView.setVisibility(visibility);
     }
 
-    public void setZoomVisibility(int visibility) {
+
+    void setZoomVisibility(int visibility) {
         mZoomInView.setVisibility(visibility);
         mZoomOutView.setVisibility(visibility);
     }
 
-    public void setAdjustVisibility(int visibility) {
+    void setAdjustVisibility(int visibility) {
         mErrorMessageLabel.setVisibility(visibility);
     }
 
-    public void setErrorVisibility(int visibility) {
+    void setErrorVisibility(int visibility) {
         mErrorMessageLabel.setVisibility(visibility);
     }
 
-    public void setListeners(LocationView.Listener locationListener, View.OnLayoutChangeListener layoutListener) {
+    void setListeners(LocationView.Listener locationListener, View.OnLayoutChangeListener layoutListener) {
         mLocationView.setListener(locationListener);
         mLocationView.addOnLayoutChangeListener(layoutListener);
     }
 
-    public void setZoomParameters(float minZoomFactor, float maxZoomFactor) {
+    void setZoomParameters(float minZoomFactor, float maxZoomFactor) {
         mLocationView.setZoomRange(minZoomFactor, maxZoomFactor);
         mLocationView.setZoomFactor(minZoomFactor);
     }
 
-    public void setErrorMessage(String message)
+    void setErrorMessage(String message)
     {
         mErrorMessageLabel.setText(message);
         mErrorMessageLabel.setVisibility(View.VISIBLE);
     }
 
-    public void redrawLocationView() {
+    void redrawLocationView() {
         mLocationView.redraw();
     }
 
-    public void zoomLocationView(float zoom) {
+    void zoomLocationView(float zoom) {
         mLocationView.zoomBy(zoom);
     }
 
-    public PointF getAbsCoordinates(float x, float y) {
+    PointF getAbsCoordinates(float x, float y) {
         return mLocationView.getAbsCoordinates(x, y);
     }
 
-    public PointF getScreenCoordinates(float x, float y) {
+    PointF getScreenCoordinates(float x, float y) {
         return mLocationView.getScreenCoordinates(x, y);
     }
 
-    public PointF getScreenCoordinates(LocationPoint p) {
+    PointF getScreenCoordinates(LocationPoint p) {
         return mLocationView.getScreenCoordinates(p);
     }
 
-    public float getLocationWidth() {
+    float getLocationWidth() {
         return mLocationView.getWidth();
     }
 
-    public float getLocationHeight() {
+    float getLocationHeight() {
         return mLocationView.getHeight();
     }
 
-    public float getScreenLengthX(float r) {
+    float getScreenLengthX(float r) {
         return mLocationView.getScreenLengthX(r);
     }
 
-    public boolean loadSubLocation(SubLocation subLoc) {
+    boolean loadSubLocation(SubLocation subLoc) {
         return mLocationView.loadSubLocation(subLoc);
     }
-    public void scrollByLocation(float deltaX, float deltaY) {
+    void scrollByLocation(float deltaX, float deltaY) {
         mLocationView.scrollBy(deltaX, deltaY);
     }
 
