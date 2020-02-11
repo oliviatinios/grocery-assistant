@@ -53,11 +53,11 @@ public class MainActivity extends Activity {
     private NavigationThread mNavigation            = null;
 
     // UI Parameters
-    private LocationView  mLocationView             = null;
-    private View          mBackView                 = null;
+//    private LocationView  mLocationView             = null;
+//    private View          mBackView                 = null;
 //    private View          mZoomInView               = null;
 //    private View          mZoomOutView              = null;
-    private Zoom zoom;
+    private Display gui;
 
     private View          mAdjustModeView           = null;
     private TextView      mErrorMessageLabel        = null;
@@ -107,10 +107,12 @@ public class MainActivity extends Activity {
                 WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
 
         // Setting up GUI parameters
-        mBackView = (View)findViewById(R.id.navigation__back_view);
+//        mBackView = (View)findViewById(R.id.navigation__back_view);
 //        mZoomInView  = (View)findViewById(R.id.navigation__zoom_in_view);
 //        mZoomOutView = (View)findViewById(R.id.navigation__zoom_out_view);
-        zoom = new Zoom(
+        gui = new Display(
+                (LocationView)findViewById(R.id.navigation__location_view),
+                (View)findViewById(R.id.navigation__back_view),
                 (View)findViewById(R.id.navigation__zoom_in_view),
                 (View)findViewById(R.id.navigation__zoom_out_view)
         );
@@ -118,10 +120,11 @@ public class MainActivity extends Activity {
         mAdjustModeView = (View)findViewById(R.id.navigation__adjust_mode_view);
         mErrorMessageLabel = (TextView)findViewById(R.id.navigation__error_message_label);
 
-        mBackView.setVisibility(View.INVISIBLE);
+//        mBackView.setVisibility(View.INVISIBLE);
 //        mZoomInView.setVisibility(View.INVISIBLE);
 //        mZoomOutView.setVisibility(View.INVISIBLE);
-        zoom.setVisibility(View.INVISIBLE);
+        gui.setBackVisibility(View.INVISIBLE);
+        gui.setZoomVisibility(View.INVISIBLE);
 
         mAdjustModeView.setVisibility(View.INVISIBLE);
         mErrorMessageLabel.setVisibility(View.GONE);
@@ -129,48 +132,87 @@ public class MainActivity extends Activity {
         mVenueBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.elm_venue);
 
         // Initializing location view
-        mLocationView = (LocationView)findViewById(R.id.navigation__location_view);
-        mLocationView.setBackgroundColor(0xffebebeb);
-        mLocationView.setListener
-                (
-                        new LocationView.Listener()
-                        {
-                            @Override public void onClick     ( float x, float y ) { handleClick(x, y);     }
-                            @Override public void onLongClick ( float x, float y ) { handleLongClick(x, y); }
-                            @Override public void onScroll    ( float x, float y, boolean byTouchEvent ) { handleScroll ( x, y,  byTouchEvent ); }
-                            @Override public void onZoom      ( float ratio,      boolean byTouchEvent ) { handleZoom   ( ratio, byTouchEvent ); }
+//        mLocationView = (LocationView)findViewById(R.id.navigation__location_view);
+//        mLocationView.setBackgroundColor(0xffebebeb);
 
-                            @Override public void onDraw(Canvas canvas)
-                            {
-                                drawZones(canvas);
-                                drawPoints(canvas);
-                                drawVenues(canvas);
-                                drawDevice(canvas);
-                            }
-                        }
-                );
+        LocationView.Listener locationListener = new LocationView.Listener()
+        {
+            @Override public void onClick     ( float x, float y ) { handleClick(x, y);     }
+            @Override public void onLongClick ( float x, float y ) { handleLongClick(x, y); }
+            @Override public void onScroll    ( float x, float y, boolean byTouchEvent ) { handleScroll ( x, y,  byTouchEvent ); }
+            @Override public void onZoom      ( float ratio,      boolean byTouchEvent ) { handleZoom   ( ratio, byTouchEvent ); }
+
+            @Override public void onDraw(Canvas canvas)
+            {
+                drawZones(canvas);
+                drawPoints(canvas);
+                drawVenues(canvas);
+                drawDevice(canvas);
+            }
+        };
 
         // Loading map only when location view size is known
-        mLocationView.addOnLayoutChangeListener
-                (
-                        new OnLayoutChangeListener()
-                        {
-                            @Override public void onLayoutChange(View v, int left, int top, int right, int bottom, int oldLeft, int oldTop, int oldRight, int oldBottom)
-                            {
-                                int width  = right  - left;
-                                int height = bottom - top;
-                                if (width == 0 || height == 0)
-                                    return;
+        OnLayoutChangeListener layoutListener = new OnLayoutChangeListener()
+        {
+            @Override public void onLayoutChange(View v, int left, int top, int right, int bottom, int oldLeft, int oldTop, int oldRight, int oldBottom)
+            {
+                int width  = right  - left;
+                int height = bottom - top;
+                if (width == 0 || height == 0)
+                    return;
 
-                                Log.d(TAG, "Layout chaged: " + width + "x" + height);
+                Log.d(TAG, "Layout chaged: " + width + "x" + height);
 
-                                int oldWidth  = oldRight  - oldLeft;
-                                int oldHeight = oldBottom - oldTop;
-                                if (oldWidth != width || oldHeight != height)
-                                    loadMap();
-                            }
-                        }
-                );
+                int oldWidth  = oldRight  - oldLeft;
+                int oldHeight = oldBottom - oldTop;
+                if (oldWidth != width || oldHeight != height)
+                    loadMap();
+            }
+        };
+
+        gui.setListeners(locationListener, layoutListener);
+
+//        mLocationView.setListener
+//                (
+//                        new LocationView.Listener()
+//                        {
+//                            @Override public void onClick     ( float x, float y ) { handleClick(x, y);     }
+//                            @Override public void onLongClick ( float x, float y ) { handleLongClick(x, y); }
+//                            @Override public void onScroll    ( float x, float y, boolean byTouchEvent ) { handleScroll ( x, y,  byTouchEvent ); }
+//                            @Override public void onZoom      ( float ratio,      boolean byTouchEvent ) { handleZoom   ( ratio, byTouchEvent ); }
+//
+//                            @Override public void onDraw(Canvas canvas)
+//                            {
+//                                drawZones(canvas);
+//                                drawPoints(canvas);
+//                                drawVenues(canvas);
+//                                drawDevice(canvas);
+//                            }
+//                        }
+//                );
+
+
+
+//        mLocationView.addOnLayoutChangeListener
+//                (
+//                        new OnLayoutChangeListener()
+//                        {
+//                            @Override public void onLayoutChange(View v, int left, int top, int right, int bottom, int oldLeft, int oldTop, int oldRight, int oldBottom)
+//                            {
+//                                int width  = right  - left;
+//                                int height = bottom - top;
+//                                if (width == 0 || height == 0)
+//                                    return;
+//
+//                                Log.d(TAG, "Layout chaged: " + width + "x" + height);
+//
+//                                int oldWidth  = oldRight  - oldLeft;
+//                                int oldHeight = oldBottom - oldTop;
+//                                if (oldWidth != width || oldHeight != height)
+//                                    loadMap();
+//                            }
+//                        }
+//                );
 
         mDisplayDensity = getResources().getDisplayMetrics().density;
         mNavigation     = NavigineSDK.getNavigation();
@@ -246,7 +288,8 @@ public class MainActivity extends Activity {
         adjustModeButton.setBackgroundResource(mAdjustMode ?
                 R.drawable.btn_adjust_mode_on :
                 R.drawable.btn_adjust_mode_off);
-        mLocationView.redraw();
+//        mLocationView.redraw();
+        gui.redrawLocationView();
     }
 
     public void onNextFloor(View v)
@@ -263,12 +306,14 @@ public class MainActivity extends Activity {
 
     public void onZoomIn(View v)
     {
-        mLocationView.zoomBy(1.25f);
+//        mLocationView.zoomBy(1.25f);
+        gui.zoomLocationView(1.25f);
     }
 
     public void onZoomOut(View v)
     {
-        mLocationView.zoomBy(0.8f);
+//        mLocationView.zoomBy(0.8f);
+        gui.zoomLocationView(0.8f);
     }
 
     public void onMakeRoute(View v)
@@ -285,8 +330,10 @@ public class MainActivity extends Activity {
         mPinPointRect = null;
 
         mNavigation.setTarget(mTargetPoint);
-        mBackView.setVisibility(View.VISIBLE);
-        mLocationView.redraw();
+//        mBackView.setVisibility(View.VISIBLE);
+//        mLocationView.redraw();
+        gui.setBackVisibility(View.VISIBLE);
+        gui.redrawLocationView();
     }
 
     public void onCancelRoute(View v)
@@ -300,8 +347,10 @@ public class MainActivity extends Activity {
         mPinPointRect = null;
 
         mNavigation.cancelTargets();
-        mBackView.setVisibility(View.GONE);
-        mLocationView.redraw();
+//        mBackView.setVisibility(View.GONE);
+//        mLocationView.redraw();
+        gui.setBackVisibility(View.GONE);
+        gui.redrawLocationView();
     }
 
     private void handleClick(float x, float y)
@@ -324,7 +373,8 @@ public class MainActivity extends Activity {
                 mPinPoint     = null;
                 mPinPointRect = null;
                 mNavigation.setTarget(mTargetPoint);
-                mBackView.setVisibility(View.VISIBLE);
+//                mBackView.setVisibility(View.VISIBLE);
+                gui.setBackVisibility(View.VISIBLE);
                 return;
             }
             cancelPin();
@@ -338,7 +388,8 @@ public class MainActivity extends Activity {
                 mTargetVenue = mSelectedVenue;
                 mTargetPoint = null;
                 mNavigation.setTarget(new LocationPoint(mLocation.getId(), subLoc.getId(), mTargetVenue.getX(), mTargetVenue.getY()));
-                mBackView.setVisibility(View.VISIBLE);
+//                mBackView.setVisibility(View.VISIBLE);
+                gui.setBackVisibility(View.VISIBLE);
             }
             cancelVenue();
             return;
@@ -356,7 +407,8 @@ public class MainActivity extends Activity {
                 mSelectedZone = (mSelectedZone == Z) ? null : Z;
         }
 
-        mLocationView.redraw();
+//        mLocationView.redraw();
+        gui.redrawLocationView();
     }
 
     public void onNav(float x, float y) {
@@ -372,15 +424,18 @@ public class MainActivity extends Activity {
         mPinPointRect = null;
 
         mNavigation.setTarget(mTargetPoint);
-        mBackView.setVisibility(View.VISIBLE);
-        mLocationView.redraw();
+//        mBackView.setVisibility(View.VISIBLE);
+//        mLocationView.redraw();
+        gui.setBackVisibility(View.VISIBLE);
+        gui.redrawLocationView();
 
     }
 
     private void handleLongClick(float x, float y)
     {
         Log.d(TAG, String.format(Locale.ENGLISH, "Long click at (%.2f, %.2f)", x, y));
-        makePin(mLocationView.getAbsCoordinates(x, y));
+//        makePin(mLocationView.getAbsCoordinates(x, y));
+        makePin(gui.getAbsCoordinates(x, y));
         cancelVenue();
     }
 
@@ -452,8 +507,10 @@ public class MainActivity extends Activity {
                 mPinPointRect = null;
 
                 mNavigation.cancelTargets();
-                mBackView.setVisibility(View.GONE);
-                mLocationView.redraw();
+//                mBackView.setVisibility(View.GONE);
+//                mLocationView.redraw();
+                gui.setBackVisibility(View.GONE);
+                gui.redrawLocationView();
 
                 if (navItem != null) {
                     textToSpeech.speak("You have arrived at the " + navItem.getName(), TextToSpeech.QUEUE_FLUSH, null);
@@ -476,14 +533,17 @@ public class MainActivity extends Activity {
         if (mDeviceInfo.isValid())
         {
             cancelErrorMessage();
-            mBackView.setVisibility(mTargetPoint != null || mTargetVenue != null ?
+//            mBackView.setVisibility(mTargetPoint != null || mTargetVenue != null ?
+//                    View.VISIBLE : View.GONE);
+            gui.setBackVisibility(mTargetPoint != null || mTargetVenue != null ?
                     View.VISIBLE : View.GONE);
             if (mAdjustMode)
                 adjustDevice();
         }
         else
         {
-            mBackView.setVisibility(View.GONE);
+//            mBackView.setVisibility(View.GONE);
+            gui.setBackVisibility(View.GONE);
             switch (mDeviceInfo.getErrorCode())
             {
                 case 4:
@@ -505,7 +565,8 @@ public class MainActivity extends Activity {
         }
 
         // This causes map redrawing
-        mLocationView.redraw();
+//        mLocationView.redraw();
+        gui.redrawLocationView();
     }
 
     private void setErrorMessage(String message)
@@ -551,8 +612,8 @@ public class MainActivity extends Activity {
         }
 
 
-        zoom.setVisibility(View.VISIBLE);
-        zoom.setVisibility(View.VISIBLE);
+        gui.setZoomVisibility(View.VISIBLE);
+        gui.setZoomVisibility(View.VISIBLE);
         mAdjustModeView.setVisibility(View.VISIBLE);
 
         mNavigation.setMode(NavigationThread.MODE_NORMAL);
@@ -560,7 +621,8 @@ public class MainActivity extends Activity {
         if (D.WRITE_LOGS)
             mNavigation.setLogFile(getLogFile("log"));
 
-        mLocationView.redraw();
+//        mLocationView.redraw();
+        gui.redrawLocationView();
         return true;
     }
 
@@ -581,25 +643,30 @@ public class MainActivity extends Activity {
             return false;
         }
 
-        if (!mLocationView.loadSubLocation(subLoc))
+//        if (!mLocationView.loadSubLocation(subLoc))
+        if(!gui.loadSubLocation(subLoc))
         {
             Log.e(TAG, "Loading sublocation failed: invalid image");
             return false;
         }
 
-        float viewWidth  = mLocationView.getWidth();
-        float viewHeight = mLocationView.getHeight();
+//        float viewWidth  = mLocationView.getWidth();
+//        float viewHeight = mLocationView.getHeight();
+        float viewWidth = gui.getLocationWidth();
+        float viewHeight = gui.getLocationHeight();
         float minZoomFactor = Math.min(viewWidth / subLoc.getWidth(), viewHeight / subLoc.getHeight());
         float maxZoomFactor = LocationView.ZOOM_FACTOR_MAX;
-        mLocationView.setZoomRange(minZoomFactor, maxZoomFactor);
-        mLocationView.setZoomFactor(minZoomFactor);
+//        mLocationView.setZoomRange(minZoomFactor, maxZoomFactor);
+//        mLocationView.setZoomFactor(minZoomFactor);
+        gui.setZoomParameters(minZoomFactor, maxZoomFactor);
         Log.d(TAG, String.format(Locale.ENGLISH, "View size: %.1f x %.1f", viewWidth, viewHeight));
 
         mAdjustTime = 0;
         mCurrentSubLocationIndex = index;
 
         cancelVenue();
-        mLocationView.redraw();
+//        mLocationView.redraw();
+        gui.redrawLocationView();
         return true;
     }
 
@@ -641,7 +708,8 @@ public class MainActivity extends Activity {
 
         mPinPoint = new LocationPoint(mLocation.getId(), subLoc.getId(), P.x, P.y);
         mPinPointRect = new RectF();
-        mLocationView.redraw();
+//        mLocationView.redraw();
+        gui.redrawLocationView();
     }
 
     private void cancelPin()
@@ -658,13 +726,15 @@ public class MainActivity extends Activity {
 
         mPinPoint = null;
         mPinPointRect = null;
-        mLocationView.redraw();
+//        mLocationView.redraw();
+        gui.redrawLocationView();
     }
 
     private void cancelVenue()
     {
         mSelectedVenue = null;
-        mLocationView.redraw();
+//        mLocationView.redraw();
+        gui.redrawLocationView();
     }
 
     private Venue getVenueAt(float x, float y)
@@ -682,7 +752,9 @@ public class MainActivity extends Activity {
         for(int i = 0; i < subLoc.getVenues().size(); ++i)
         {
             Venue v = subLoc.getVenues().get(i);
-            PointF P = mLocationView.getScreenCoordinates(v.getX(), v.getY());
+//            PointF P = mLocationView.getScreenCoordinates(v.getX(), v.getY());
+            PointF P = gui.getScreenCoordinates(v.getX(), v.getY());
+
             float d = Math.abs(x - P.x) + Math.abs(y - P.y);
             if (d < 30.0f * mDisplayDensity && d < d0)
             {
@@ -703,7 +775,8 @@ public class MainActivity extends Activity {
         if (subLoc == null)
             return null;
 
-        PointF P = mLocationView.getAbsCoordinates(x, y);
+//        PointF P = mLocationView.getAbsCoordinates(x, y);
+        PointF P = gui.getAbsCoordinates(x, y);
         LocationPoint LP = new LocationPoint(mLocation.getId(), subLoc.getId(), P.x, P.y);
 
         for(int i = 0; i < subLoc.getZones().size(); ++i)
@@ -742,7 +815,8 @@ public class MainActivity extends Activity {
         // Drawing pin point (if it exists and belongs to the current sublocation)
         if (mPinPoint != null && mPinPoint.subLocation == subLoc.getId())
         {
-            final PointF T = mLocationView.getScreenCoordinates(mPinPoint);
+//            final PointF T = mLocationView.getScreenCoordinates(mPinPoint);
+            final PointF T = gui.getScreenCoordinates(mPinPoint);
             final float tRadius = 10 * dp;
 
             paint.setARGB(255, 0, 0, 0);
@@ -772,7 +846,8 @@ public class MainActivity extends Activity {
         // Drawing target point (if it exists and belongs to the current sublocation)
         if (mTargetPoint != null && mTargetPoint.subLocation == subLoc.getId())
         {
-            final PointF T = mLocationView.getScreenCoordinates(mTargetPoint);
+//            final PointF T = mLocationView.getScreenCoordinates(mTargetPoint);
+            final PointF T = gui.getScreenCoordinates(mTargetPoint);
             final float tRadius = 10 * dp;
 
             paint.setARGB(255, 0, 0, 0);
@@ -809,7 +884,8 @@ public class MainActivity extends Activity {
             if (v.getSubLocationId() != subLoc.getId())
                 continue;
 
-            final PointF P = mLocationView.getScreenCoordinates(v.getX(), v.getY());
+//            final PointF P = mLocationView.getScreenCoordinates(v.getX(), v.getY());
+            final PointF P = gui.getScreenCoordinates(v.getX(), v.getY());
             final float x0 = P.x - venueSize/2;
             final float y0 = P.y - venueSize/2;
             final float x1 = P.x + venueSize/2;
@@ -819,7 +895,8 @@ public class MainActivity extends Activity {
 
         if (mSelectedVenue != null)
         {
-            final PointF T = mLocationView.getScreenCoordinates(mSelectedVenue.getX(), mSelectedVenue.getY());
+//            final PointF T = mLocationView.getScreenCoordinates(mSelectedVenue.getX(), mSelectedVenue.getY());
+            final PointF T = gui.getScreenCoordinates(mSelectedVenue.getX(), mSelectedVenue.getY());
             final float textWidth = paint.measureText(mSelectedVenue.getName());
 
             final float h  = 50 * dp;
@@ -861,13 +938,15 @@ public class MainActivity extends Activity {
 
             Path path = new Path();
             final LocationPoint P0 = Z.getPoints().get(0);
-            final PointF        Q0 = mLocationView.getScreenCoordinates(P0);
+//            final PointF        Q0 = mLocationView.getScreenCoordinates(P0);
+            final PointF        Q0 = gui.getScreenCoordinates(P0);
             path.moveTo(Q0.x, Q0.y);
 
             for(int j = 0; j < Z.getPoints().size(); ++j)
             {
                 final LocationPoint P = Z.getPoints().get((j + 1) % Z.getPoints().size());
-                final PointF        Q = mLocationView.getScreenCoordinates(P);
+//                final PointF        Q = mLocationView.getScreenCoordinates(P);
+                final PointF        Q = gui.getScreenCoordinates(P);
                 path.lineTo(Q.x, Q.y);
             }
 
@@ -921,8 +1000,10 @@ public class MainActivity extends Activity {
                     if (P.subLocation == subLoc.getId() && Q.subLocation == subLoc.getId())
                     {
                         paint.setStrokeWidth(3 * dp);
-                        PointF P1 = mLocationView.getScreenCoordinates(P);
-                        PointF Q1 = mLocationView.getScreenCoordinates(Q);
+//                        PointF P1 = mLocationView.getScreenCoordinates(P);
+//                        PointF Q1 = mLocationView.getScreenCoordinates(Q);
+                        PointF P1 = gui.getScreenCoordinates(P);
+                        PointF Q1 = gui.getScreenCoordinates(Q);
                         canvas.drawLine(P1.x, P1.y, Q1.x, Q1.y, paint);
                     }
                 }
@@ -941,10 +1022,12 @@ public class MainActivity extends Activity {
         final float angle = mDeviceInfo.getAzimuth();
         final float sinA = (float)Math.sin(angle);
         final float cosA = (float)Math.cos(angle);
-        final float radius  = mLocationView.getScreenLengthX(r);  // External radius: navigation-determined, transparent
+//        final float radius  = mLocationView.getScreenLengthX(r);  // External radius: navigation-determined, transparent
+        final float radius  = gui.getScreenLengthX(r);
         final float radius1 = 25 * dp;                            // Internal radius: fixed, solid
 
-        PointF O = mLocationView.getScreenCoordinates(x, y);
+//        PointF O = mLocationView.getScreenCoordinates(x, y);
+        PointF O = gui.getScreenCoordinates(x, y);
         PointF P = new PointF(O.x - radius1 * sinA * 0.22f, O.y + radius1 * cosA * 0.22f);
         PointF Q = new PointF(O.x + radius1 * sinA * 0.55f, O.y - radius1 * cosA * 0.55f);
         PointF R = new PointF(O.x + radius1 * cosA * 0.44f - radius1 * sinA * 0.55f, O.y + radius1 * sinA * 0.44f + radius1 * cosA * 0.55f);
@@ -997,12 +1080,19 @@ public class MainActivity extends Activity {
                         loadSubLocation(i);
             }
 
+//            // Secondly, adjust device to the center of the screen
+//            PointF center = mLocationView.getScreenCoordinates(mDeviceInfo.getX(), mDeviceInfo.getY());
+//            float deltaX  = mLocationView.getWidth()  / 2 - center.x;
+//            float deltaY  = mLocationView.getHeight() / 2 - center.y;
+//            mAdjustTime   = timeNow;
+//            mLocationView.scrollBy(deltaX, deltaY);
+
             // Secondly, adjust device to the center of the screen
-            PointF center = mLocationView.getScreenCoordinates(mDeviceInfo.getX(), mDeviceInfo.getY());
-            float deltaX  = mLocationView.getWidth()  / 2 - center.x;
-            float deltaY  = mLocationView.getHeight() / 2 - center.y;
+            PointF center = gui.getScreenCoordinates(mDeviceInfo.getX(), mDeviceInfo.getY());
+            float deltaX  = gui.getLocationWidth()  / 2 - center.x;
+            float deltaY  = gui.getLocationHeight() / 2 - center.y;
             mAdjustTime   = timeNow;
-            mLocationView.scrollBy(deltaX, deltaY);
+            gui.scrollByLocation(deltaX, deltaY);
         }
     }
 
