@@ -1,7 +1,9 @@
 package com.example.groceryassistant;
 
 import android.graphics.PointF;
+import android.os.Handler;
 import android.view.View;
+import android.widget.TextView;
 
 import com.navigine.naviginesdk.LocationPoint;
 import com.navigine.naviginesdk.LocationView;
@@ -10,19 +12,27 @@ import com.navigine.naviginesdk.SubLocation;
 public class Display {
 
     // UI Parameters
-    public LocationView mLocationView;
+    private LocationView mLocationView;
     private View mBackView;
     private View mZoomInView;
     private View mZoomOutView;
 
+    private View mAdjustModeView;
+    private TextView mErrorMessageLabel;
 
-    public Display(LocationView location, View back, View zIn, View zOut) {
+    public float mDisplayDensity = 0.0f;
+
+
+    public Display(LocationView location, View back, View zIn, View zOut, View mode, TextView error) {
         mLocationView = location;
         mBackView = back;
         mZoomInView  = zIn;
         mZoomOutView = zOut;
+        mAdjustModeView = mode;
+        mErrorMessageLabel = error;
 
-        mLocationView.setBackgroundColor(0xffebebeb);
+//        mLocationView.setBackgroundColor(0xffebebeb); // The old background colour
+        mLocationView.setBackgroundColor(0xAA40E0D0);
     }
 
     public void setBackVisibility(int visibility) {
@@ -34,6 +44,14 @@ public class Display {
         mZoomOutView.setVisibility(visibility);
     }
 
+    public void setAdjustVisibility(int visibility) {
+        mErrorMessageLabel.setVisibility(visibility);
+    }
+
+    public void setErrorVisibility(int visibility) {
+        mErrorMessageLabel.setVisibility(visibility);
+    }
+
     public void setListeners(LocationView.Listener locationListener, View.OnLayoutChangeListener layoutListener) {
         mLocationView.setListener(locationListener);
         mLocationView.addOnLayoutChangeListener(layoutListener);
@@ -42,6 +60,12 @@ public class Display {
     public void setZoomParameters(float minZoomFactor, float maxZoomFactor) {
         mLocationView.setZoomRange(minZoomFactor, maxZoomFactor);
         mLocationView.setZoomFactor(minZoomFactor);
+    }
+
+    public void setErrorMessage(String message)
+    {
+        mErrorMessageLabel.setText(message);
+        mErrorMessageLabel.setVisibility(View.VISIBLE);
     }
 
     public void redrawLocationView() {

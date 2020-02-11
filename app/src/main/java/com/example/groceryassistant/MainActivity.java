@@ -57,12 +57,13 @@ public class MainActivity extends Activity {
 //    private View          mBackView                 = null;
 //    private View          mZoomInView               = null;
 //    private View          mZoomOutView              = null;
-    private Display gui;
 
-    private View          mAdjustModeView           = null;
-    private TextView      mErrorMessageLabel        = null;
-    private Handler       mHandler                  = new Handler();
-    private float         mDisplayDensity           = 0.0f;
+//    private View          mAdjustModeView           = null;
+//    private TextView      mErrorMessageLabel        = null;
+//    private Handler       mHandler                  = new Handler();
+//    private float         mDisplayDensity           = 0.0f;
+
+    private Display gui;
 
     private boolean       mAdjustMode               = false;
     private long          mAdjustTime               = 0;
@@ -114,11 +115,13 @@ public class MainActivity extends Activity {
                 (LocationView)findViewById(R.id.navigation__location_view),
                 (View)findViewById(R.id.navigation__back_view),
                 (View)findViewById(R.id.navigation__zoom_in_view),
-                (View)findViewById(R.id.navigation__zoom_out_view)
+                (View)findViewById(R.id.navigation__zoom_out_view),
+                (View)findViewById(R.id.navigation__adjust_mode_view),
+                (TextView)findViewById(R.id.navigation__error_message_label)
         );
 
-        mAdjustModeView = (View)findViewById(R.id.navigation__adjust_mode_view);
-        mErrorMessageLabel = (TextView)findViewById(R.id.navigation__error_message_label);
+//        mAdjustModeView = (View)findViewById(R.id.navigation__adjust_mode_view);
+//        mErrorMessageLabel = (TextView)findViewById(R.id.navigation__error_message_label);
 
 //        mBackView.setVisibility(View.INVISIBLE);
 //        mZoomInView.setVisibility(View.INVISIBLE);
@@ -126,8 +129,10 @@ public class MainActivity extends Activity {
         gui.setBackVisibility(View.INVISIBLE);
         gui.setZoomVisibility(View.INVISIBLE);
 
-        mAdjustModeView.setVisibility(View.INVISIBLE);
-        mErrorMessageLabel.setVisibility(View.GONE);
+//        mAdjustModeView.setVisibility(View.INVISIBLE);
+//        mErrorMessageLabel.setVisibility(View.GONE);
+        gui.setAdjustVisibility(View.INVISIBLE);
+        gui.setErrorVisibility(View.GONE);
 
         mVenueBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.elm_venue);
 
@@ -214,7 +219,7 @@ public class MainActivity extends Activity {
 //                        }
 //                );
 
-        mDisplayDensity = getResources().getDisplayMetrics().density;
+        gui.mDisplayDensity = getResources().getDisplayMetrics().density;
         mNavigation     = NavigineSDK.getNavigation();
 
         // Setting up device listener
@@ -532,7 +537,8 @@ public class MainActivity extends Activity {
 
         if (mDeviceInfo.isValid())
         {
-            cancelErrorMessage();
+//            cancelErrorMessage();
+            gui.setErrorVisibility(View.GONE);
 //            mBackView.setVisibility(mTargetPoint != null || mTargetVenue != null ?
 //                    View.VISIBLE : View.GONE);
             gui.setBackVisibility(mTargetPoint != null || mTargetVenue != null ?
@@ -547,16 +553,16 @@ public class MainActivity extends Activity {
             switch (mDeviceInfo.getErrorCode())
             {
                 case 4:
-                    setErrorMessage("You are out of navigation zone! Please, check that your bluetooth is enabled!");
+                    gui.setErrorMessage("You are out of navigation zone! Please, check that your bluetooth is enabled!");
                     break;
 
                 case 8:
                 case 30:
-                    setErrorMessage("Not enough beacons on the location! Please, add more beacons!");
+                    gui.setErrorMessage("Not enough beacons on the location! Please, add more beacons!");
                     break;
 
                 default:
-                    setErrorMessage(String.format(Locale.ENGLISH,
+                    gui.setErrorMessage(String.format(Locale.ENGLISH,
                             "Something is wrong with location '%s' (error code %d)! " +
                                     "Please, contact technical support!",
                             mLocation.getName(), mDeviceInfo.getErrorCode()));
@@ -569,16 +575,16 @@ public class MainActivity extends Activity {
         gui.redrawLocationView();
     }
 
-    private void setErrorMessage(String message)
-    {
-        mErrorMessageLabel.setText(message);
-        mErrorMessageLabel.setVisibility(View.VISIBLE);
-    }
+//    private void setErrorMessage(String message)
+//    {
+//        mErrorMessageLabel.setText(message);
+//        mErrorMessageLabel.setVisibility(View.VISIBLE);
+//    }
 
-    private void cancelErrorMessage()
-    {
-        mErrorMessageLabel.setVisibility(View.GONE);
-    }
+//    private void cancelErrorMessage()
+//    {
+//        mErrorMessageLabel.setVisibility(View.GONE);
+//    }
 
     private boolean loadMap()
     {
@@ -614,7 +620,8 @@ public class MainActivity extends Activity {
 
         gui.setZoomVisibility(View.VISIBLE);
         gui.setZoomVisibility(View.VISIBLE);
-        mAdjustModeView.setVisibility(View.VISIBLE);
+//        mAdjustModeView.setVisibility(View.VISIBLE);
+        gui.setAdjustVisibility(View.GONE);
 
         mNavigation.setMode(NavigationThread.MODE_NORMAL);
 
@@ -756,7 +763,7 @@ public class MainActivity extends Activity {
             PointF P = gui.getScreenCoordinates(v.getX(), v.getY());
 
             float d = Math.abs(x - P.x) + Math.abs(y - P.y);
-            if (d < 30.0f * mDisplayDensity && d < d0)
+            if (d < 30.0f * gui.mDisplayDensity && d < d0)
             {
                 v0 = v;
                 d0 = d;
@@ -803,7 +810,7 @@ public class MainActivity extends Activity {
         final int solidColor  = Color.argb(255, 64, 163, 205);  // Light-blue color
         final int circleColor = Color.argb(127, 64, 163, 205);  // Semi-transparent light-blue color
         final int arrowColor  = Color.argb(255, 255, 255, 255); // White color
-        final float dp        = mDisplayDensity;
+        final float dp        = gui.mDisplayDensity;
         final float textSize  = 16 * dp;
 
         // Preparing paints
@@ -866,7 +873,7 @@ public class MainActivity extends Activity {
 
         SubLocation subLoc = mLocation.getSubLocations().get(mCurrentSubLocationIndex);
 
-        final float dp = mDisplayDensity;
+        final float dp = gui.mDisplayDensity;
         final float textSize  = 16 * dp;
         final float venueSize = 30 * dp;
         final int   venueColor = Color.argb(255, 0xCD, 0x88, 0x50); // Venue color
@@ -978,7 +985,7 @@ public class MainActivity extends Activity {
         final int solidColor  = Color.argb(255, 64,  163, 205); // Light-blue color
         final int circleColor = Color.argb(127, 64,  163, 205); // Semi-transparent light-blue color
         final int arrowColor  = Color.argb(255, 255, 255, 255); // White color
-        final float dp = mDisplayDensity;
+        final float dp = gui.mDisplayDensity;
 
         // Preparing paints
         Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
