@@ -1,7 +1,6 @@
 package com.example.groceryassistant;
 
 import android.graphics.PointF;
-import android.os.Handler;
 import android.view.View;
 import android.widget.TextView;
 
@@ -9,14 +8,13 @@ import com.navigine.naviginesdk.LocationPoint;
 import com.navigine.naviginesdk.LocationView;
 import com.navigine.naviginesdk.SubLocation;
 
-public class Display {
+class Display {
 
     // UI Parameters
     private LocationView mLocationView;
     private View mBackView;
     private View mZoomInView;
     private View mZoomOutView;
-
     private View mAdjustModeView;
     private TextView mErrorMessageLabel;
 
@@ -24,12 +22,12 @@ public class Display {
 
 
     Display(LocationView location, View back, View zIn, View zOut, View mode, TextView error) {
-        mLocationView = location;
-        mBackView = back;
-        mZoomInView  = zIn;
-        mZoomOutView = zOut;
-        mAdjustModeView = mode;
-        mErrorMessageLabel = error;
+        this.mLocationView = location;
+        this.mBackView = back;
+        this.mZoomInView  = zIn;
+        this.mZoomOutView = zOut;
+        this.mAdjustModeView = mode;
+        this.mErrorMessageLabel = error;
 
 //        mLocationView.setBackgroundColor(0xffebebeb); // The old background colour
         mLocationView.setBackgroundColor(0xAA40E0D0);
@@ -69,44 +67,25 @@ public class Display {
         mErrorMessageLabel.setVisibility(View.VISIBLE);
     }
 
-    void redrawLocationView() {
-        mLocationView.redraw();
-    }
+    void redrawLocationView() { mLocationView.redraw(); }
 
-    void zoomLocationView(float zoom) {
-        mLocationView.zoomBy(zoom);
-    }
+    void zoomLocationView(float zoom) { mLocationView.zoomBy(zoom); }
 
-    PointF getAbsCoordinates(float x, float y) {
-        return mLocationView.getAbsCoordinates(x, y);
-    }
+    PointF getAbsCoordinates(float x, float y) { return mLocationView.getAbsCoordinates(x, y); }
 
-    PointF getScreenCoordinates(float x, float y) {
-        return mLocationView.getScreenCoordinates(x, y);
-    }
+    PointF getScreenCoordinates(float x, float y) { return mLocationView.getScreenCoordinates(x, y); }
 
-    PointF getScreenCoordinates(LocationPoint p) {
-        return mLocationView.getScreenCoordinates(p);
-    }
+    PointF getScreenCoordinates(LocationPoint p) { return mLocationView.getScreenCoordinates(p); }
 
-    float getLocationWidth() {
-        return mLocationView.getWidth();
-    }
+    float getLocationWidth() { return mLocationView.getWidth(); }
 
-    float getLocationHeight() {
-        return mLocationView.getHeight();
-    }
+    float getLocationHeight() { return mLocationView.getHeight(); }
 
-    float getScreenLengthX(float r) {
-        return mLocationView.getScreenLengthX(r);
-    }
+    float getScreenLengthX(float r) { return mLocationView.getScreenLengthX(r); }
 
-    boolean loadSubLocation(SubLocation subLoc) {
-        return mLocationView.loadSubLocation(subLoc);
-    }
-    void scrollByLocation(float deltaX, float deltaY) {
-        mLocationView.scrollBy(deltaX, deltaY);
-    }
+    boolean loadSubLocation(SubLocation subLoc) { return mLocationView.loadSubLocation(subLoc); }
+
+    void scrollByLocation(float deltaX, float deltaY) { mLocationView.scrollBy(deltaX, deltaY); }
 
 
 

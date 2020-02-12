@@ -1,47 +1,66 @@
 package com.example.groceryassistant;
 
-import androidx.appcompat.app.AppCompatActivity;
+import android.Manifest;
+import android.app.Activity;
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.Context;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.Path;
+import android.graphics.PointF;
+import android.graphics.RectF;
+import android.graphics.Typeface;
+import android.os.Build;
+import android.os.Bundle;
+import android.os.Environment;
+import android.speech.tts.TextToSpeech;
+import android.util.Log;
+import android.view.View;
+import android.view.View.OnLayoutChangeListener;
+import android.view.Window;
+import android.view.WindowManager;
+import android.widget.Button;
+import android.widget.TextView;
+import android.widget.Toast;
+
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
-import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.mobile.client.AWSMobileClient;
 import com.amazonaws.mobile.client.AWSStartupHandler;
 import com.amazonaws.mobile.client.AWSStartupResult;
-import com.amazonaws.mobile.config.AWSConfiguration;
+import com.amazonaws.mobileconnectors.dynamodbv2.dynamodbmapper.DynamoDBMapper;
 import com.amazonaws.mobileconnectors.lex.interactionkit.Response;
 import com.amazonaws.mobileconnectors.lex.interactionkit.config.InteractionConfig;
 import com.amazonaws.mobileconnectors.lex.interactionkit.ui.InteractiveVoiceView;
-import com.amazonaws.mobileconnectors.dynamodbv2.dynamodbmapper.DynamoDBMapper;
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
+import com.navigine.naviginesdk.DeviceInfo;
+import com.navigine.naviginesdk.Location;
+import com.navigine.naviginesdk.LocationPoint;
+import com.navigine.naviginesdk.LocationView;
+import com.navigine.naviginesdk.NavigationThread;
+import com.navigine.naviginesdk.NavigineSDK;
+import com.navigine.naviginesdk.RoutePath;
+import com.navigine.naviginesdk.SubLocation;
+import com.navigine.naviginesdk.Venue;
+import com.navigine.naviginesdk.Zone;
 
-import android.app.*;
-import android.content.*;
-import android.graphics.*;
-import android.os.*;
-import android.speech.tts.TextToSpeech;
-import android.view.*;
-import android.view.View.*;
-import android.widget.*;
-import android.util.*;
-import java.io.*;
-import java.lang.*;
-import java.util.*;
-
-import android.Manifest;
-import android.content.pm.PackageManager;
-import android.os.Bundle;
-import android.util.Log;
-import android.widget.Toast;
-
+import java.io.File;
+import java.util.Calendar;
 import java.util.Locale;
 import java.util.Map;
 
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
-import com.navigine.naviginesdk.*;
-
 public class MainActivity extends Activity {
 
-    private static final String   TAG                     = "MAIN_ACTIVITY";;
+    private static final String   TAG                     = "MAIN_ACTIVITY";
     private static final String   NOTIFICATION_CHANNEL    = "GROCERYASSISTANT_NOTIFICATION_CHANNEL";
     private static final int      ADJUST_TIMEOUT          = 5000; // milliseconds
     private static final boolean  ORIENTATION_ENABLED     = true; // Show device orientation?
@@ -70,8 +89,6 @@ public class MainActivity extends Activity {
     private Venue   mSelectedVenue  = null;
     private RectF   mSelectedVenueRect = null;
     private Zone    mSelectedZone   = null;
-
-
 
     private final int MY_PERMISSIONS_RECORD_AUDIO = 1;
 
@@ -535,20 +552,6 @@ public class MainActivity extends Activity {
         cancelVenue();
         gui.redrawLocationView();
         return true;
-    }
-
-    private boolean loadNextSubLocation()
-    {
-        if (mLocation == null || mCurrentSubLocationIndex < 0)
-            return false;
-        return loadSubLocation(mCurrentSubLocationIndex + 1);
-    }
-
-    private boolean loadPrevSubLocation()
-    {
-        if (mLocation == null || mCurrentSubLocationIndex < 0)
-            return false;
-        return loadSubLocation(mCurrentSubLocationIndex - 1);
     }
 
     private void makePin(PointF P)
