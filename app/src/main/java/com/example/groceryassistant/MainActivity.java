@@ -113,10 +113,10 @@ public class MainActivity extends Activity {
 
         gui = new Display(
                 (LocationView)findViewById(R.id.navigation__location_view),
-                (View)findViewById(R.id.navigation__back_view),
-                (View)findViewById(R.id.navigation__zoom_in_view),
-                (View)findViewById(R.id.navigation__zoom_out_view),
-                (View)findViewById(R.id.navigation__adjust_mode_view),
+                findViewById(R.id.navigation__back_view),
+                findViewById(R.id.navigation__zoom_in_view),
+                findViewById(R.id.navigation__zoom_out_view),
+                findViewById(R.id.navigation__adjust_mode_view),
                 (TextView)findViewById(R.id.navigation__error_message_label)
         );
 
@@ -234,7 +234,7 @@ public class MainActivity extends Activity {
     {
         mAdjustMode = !mAdjustMode;
         mAdjustTime = 0;
-        Button adjustModeButton = (Button)findViewById(R.id.navigation__adjust_mode_button);
+        Button adjustModeButton = findViewById(R.id.navigation__adjust_mode_button);
         adjustModeButton.setBackgroundResource(mAdjustMode ?
                 R.drawable.btn_adjust_mode_on :
                 R.drawable.btn_adjust_mode_off);
@@ -322,6 +322,8 @@ public class MainActivity extends Activity {
     }
 
     public void onNav(float x, float y) {
+
+        Log.d("Debug:onNav", "x = " + x + ", y = " + y);
 
         if (mNavigation == null)
             return;
@@ -1023,7 +1025,7 @@ public class MainActivity extends Activity {
     //Handling callback
     @Override
     public void onRequestPermissionsResult(int requestCode,
-                                           String permissions[], int[] grantResults) {
+                                           String[] permissions, int[] grantResults) {
         switch (requestCode) {
             case MY_PERMISSIONS_RECORD_AUDIO: {
                 if (grantResults.length > 0
@@ -1050,7 +1052,7 @@ public class MainActivity extends Activity {
 
     public void initInteractiveVoiceView(){
         InteractiveVoiceView voiceView =
-                (InteractiveVoiceView) findViewById(R.id.voiceInterface);
+                findViewById(R.id.voiceInterface);
 
         voiceView.setInteractiveVoiceListener(
                 new InteractiveVoiceView.InteractiveVoiceListener() {
@@ -1069,7 +1071,7 @@ public class MainActivity extends Activity {
                                 public void run() {
                                     try {
                                         getItem(dynamoDBMapper, shoppingListItem);
-                                        onNav(navItem.getPositionX(), navItem.getPositionY());
+                                        //onNav(navItem.getPositionX(), navItem.getPositionY());
 
                                     }
                                     catch (Throwable t) {
@@ -1080,9 +1082,13 @@ public class MainActivity extends Activity {
                             };
                             Thread mythread = new Thread(runnable);
                             mythread.start();
+                            // TOTO Fix loop
+                            while(navItem == null) {}
+
+                            onNav(navItem.getPositionX(), navItem.getPositionY());
                         }
                     }
-
+                    //onNav(navItem.getPositionX(), navItem.getPositionY());
                     @Override
                     public void onResponse(Response response) {
                         Log.d(TAG, "User input: " + response.getInputTranscript());
