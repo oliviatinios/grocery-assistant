@@ -18,8 +18,9 @@ class Display {
     private View mAdjustModeView;
     private TextView mErrorMessageLabel;
 
-    float mDisplayDensity = 0.0f;
+    private float mDisplayDensity = 0.0f;
 
+    Display() {}
 
     Display(LocationView location, View back, View zIn, View zOut, View mode, TextView error) {
         this.mLocationView = location;
@@ -67,9 +68,23 @@ class Display {
         mErrorMessageLabel.setVisibility(View.VISIBLE);
     }
 
+    void setDisplayDensity(float density) { mDisplayDensity = density; }
+
+    float getDisplayDensity() { return mDisplayDensity; }
+
     void redrawLocationView() { mLocationView.redraw(); }
 
     void zoomLocationView(float zoom) { mLocationView.zoomBy(zoom); }
+
+    int getBackVisibility() { return mBackView.getVisibility(); }
+
+    int getZoomVisibility() {return mZoomInView.getVisibility(); }
+
+    int getAdjustVisibility() { return mErrorMessageLabel.getVisibility(); }
+
+    int getErrorVisibility() {
+        return mErrorMessageLabel.getVisibility();
+    }
 
     PointF getAbsCoordinates(float x, float y) { return mLocationView.getAbsCoordinates(x, y); }
 

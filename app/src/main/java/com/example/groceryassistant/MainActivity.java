@@ -68,7 +68,6 @@ public class MainActivity extends Activity {
 
     private Display     gui;
     private Navigation  nav;
-//    private Position    pos;
     private VoiceInterface talk;
 
     // Location parameters
@@ -162,7 +161,7 @@ public class MainActivity extends Activity {
 
         gui.setListeners(locationListener, layoutListener);
 
-        gui.mDisplayDensity = getResources().getDisplayMetrics().density;
+        gui.setDisplayDensity(getResources().getDisplayMetrics().density);
         nav = new Navigation();
 
         // Setting up device listener
@@ -187,8 +186,6 @@ public class MainActivity extends Activity {
                 notificationManager.createNotificationChannel(new NotificationChannel(NOTIFICATION_CHANNEL, "default",
                         NotificationManager.IMPORTANCE_LOW));
         }
-
-//        pos = new Position();
 
         connectToAws();
         requestAudioPermissions();
@@ -614,7 +611,7 @@ public class MainActivity extends Activity {
             PointF P = gui.getScreenCoordinates(v.getX(), v.getY());
 
             float d = Math.abs(x - P.x) + Math.abs(y - P.y);
-            if (d < 30.0f * gui.mDisplayDensity && d < d0)
+            if (d < 30.0f * gui.getDisplayDensity() && d < d0)
             {
                 v0 = v;
                 d0 = d;
@@ -660,7 +657,7 @@ public class MainActivity extends Activity {
         final int solidColor  = Color.argb(255, 64, 163, 205);  // Light-blue color
         final int circleColor = Color.argb(127, 64, 163, 205);  // Semi-transparent light-blue color
         final int arrowColor  = Color.argb(255, 255, 255, 255); // White color
-        final float dp        = gui.mDisplayDensity;
+        final float dp        = gui.getDisplayDensity();
         final float textSize  = 16 * dp;
 
         // Preparing paints
@@ -721,7 +718,7 @@ public class MainActivity extends Activity {
 
         SubLocation subLoc = mLocation.getSubLocations().get(mCurrentSubLocationIndex);
 
-        final float dp = gui.mDisplayDensity;
+        final float dp = gui.getDisplayDensity();
         final float textSize  = 16 * dp;
         final float venueSize = 30 * dp;
         final int   venueColor = Color.argb(255, 0xCD, 0x88, 0x50); // Venue color
@@ -829,7 +826,7 @@ public class MainActivity extends Activity {
         final int solidColor  = Color.argb(255, 64,  163, 205); // Light-blue color
         final int circleColor = Color.argb(127, 64,  163, 205); // Semi-transparent light-blue color
         final int arrowColor  = Color.argb(255, 255, 255, 255); // White color
-        final float dp = gui.mDisplayDensity;
+        final float dp = gui.getDisplayDensity();
 
         // Preparing paints
         Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
