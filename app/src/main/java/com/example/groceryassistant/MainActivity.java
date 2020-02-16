@@ -66,15 +66,10 @@ public class MainActivity extends Activity {
     private static final boolean  ORIENTATION_ENABLED     = true; // Show device orientation?
     private static final boolean  NOTIFICATIONS_ENABLED   = true; // Show zone notifications?
 
-//    // NavigationThread instance
-//    private NavigationThread mNavigation            = null;
-
     private Display     gui;
     private Navigation  nav;
-    private Position    pos;
-
-//    private boolean       mAdjustMode               = false;
-//    private long          mAdjustTime               = 0;
+//    private Position    pos;
+    private VoiceInterface talk;
 
     // Location parameters
     private Location      mLocation                 = null;
@@ -98,7 +93,7 @@ public class MainActivity extends Activity {
     private DynamoDBMapper dynamoDBMapper;
 
     // Text to speech
-    private TextToSpeech textToSpeech;
+//    private TextToSpeech textToSpeech;
     private Item navItem;
 
 
@@ -168,7 +163,6 @@ public class MainActivity extends Activity {
         gui.setListeners(locationListener, layoutListener);
 
         gui.mDisplayDensity = getResources().getDisplayMetrics().density;
-//        mNavigation     = NavigineSDK.getNavigation();
         nav = new Navigation();
 
         // Setting up device listener
@@ -176,7 +170,6 @@ public class MainActivity extends Activity {
         {
             @Override public void onUpdate(DeviceInfo info) { handleDeviceUpdate(info); }
         };
-
 
         // Setting up zone listener
         Zone.Listener zoneListener = new Zone.Listener()
@@ -200,26 +193,17 @@ public class MainActivity extends Activity {
         connectToAws();
         requestAudioPermissions();
 
-        textToSpeech = new TextToSpeech(getApplicationContext(), new TextToSpeech.OnInitListener() {
-            @Override
-            public void onInit(int status) {
-                if(status != TextToSpeech.ERROR) {
-                    textToSpeech.setLanguage(Locale.CANADA);
-                }
-            }
-        });
+        talk = new VoiceInterface(getApplicationContext());
+//        textToSpeech = new TextToSpeech(getApplicationContext(), new TextToSpeech.OnInitListener() {
+//            @Override
+//            public void onInit(int status) {
+//                if(status != TextToSpeech.ERROR) {
+//                    textToSpeech.setLanguage(Locale.CANADA);
+//                }
+//            }
+//        });
     }
 
-//    @Override public void onDestroy()
-//    {
-//        if (mNavigation != null)
-//        {
-//            NavigineSDK.finish();
-//            mNavigation = null;
-//        }
-//
-//        super.onDestroy();
-//    }
     @Override public void onDestroy()
     {
         if (!nav.isNull())
@@ -257,20 +241,6 @@ public class MainActivity extends Activity {
         gui.zoomLocationView(0.8f);
     }
 
-//    public void onCancelRoute(View v)
-//    {
-//        if (mNavigation == null)
-//            return;
-//
-//        mTargetPoint  = null;
-//        mTargetVenue  = null;
-//        mPinPoint     = null;
-//        mPinPointRect = null;
-//
-//        mNavigation.cancelTargets();
-//        gui.setBackVisibility(View.GONE);
-//        gui.redrawLocationView();
-//    }
     public void onCancelRoute(View v)
     {
         if (nav.isNull())
@@ -440,9 +410,9 @@ public class MainActivity extends Activity {
                 gui.redrawLocationView();
 
                 if (navItem != null) {
-                    textToSpeech.speak("You have arrived at the " + navItem.getName(), TextToSpeech.QUEUE_FLUSH, null);
+                    talk.speak("You have arrived at the " + navItem.getName());
                 } else {
-                    textToSpeech.speak("You have arrived", TextToSpeech.QUEUE_FLUSH, null);
+                    talk.speak("You have arrived");
                 }
                 navItem = null;
                 Log.d(TAG, "Navigation Ended");
@@ -528,12 +498,10 @@ public class MainActivity extends Activity {
         gui.setZoomVisibility(View.VISIBLE);
         gui.setAdjustVisibility(View.GONE);
 
-//        mNavigation.setMode(NavigationThread.MODE_NORMAL);
         nav.setMode(NavigationThread.MODE_NORMAL);
 
         if (D.WRITE_LOGS)
             nav.setLogFile(getLogFile("log"));
-//            mNavigation.setLogFile(getLogFile("log"));
 
         gui.redrawLocationView();
         return true;
@@ -1068,8 +1036,7 @@ public class MainActivity extends Activity {
         Item item = mapper.load(Item.class, name);
         Log.d(TAG,item.toString());
         navItem = item;
-        textToSpeech.speak("Calculating route to the "
-                + navItem.getName(), TextToSpeech.QUEUE_FLUSH, null);
+        talk.speak("Calculating route to the " + navItem.getName());
     }
 
     public void initInteractiveVoiceView(){

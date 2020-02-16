@@ -11,8 +11,8 @@ class Navigation {
 
     // NavigationThread instance
     private NavigationThread mNavigation;
-    private boolean mAdjustMode;
 
+    private boolean mAdjustMode;
     private long mAdjustTime;
 
     Navigation() {
