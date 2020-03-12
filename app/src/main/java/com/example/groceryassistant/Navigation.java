@@ -67,4 +67,5 @@ class Navigation {
     void setTime(long time) {
         mAdjustTime = time;
     }
+
 }

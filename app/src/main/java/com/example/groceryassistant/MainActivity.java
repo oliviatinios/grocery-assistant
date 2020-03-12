@@ -384,8 +384,10 @@ public class MainActivity extends Activity {
 
     private void handleDeviceUpdate(DeviceInfo deviceInfo)
     {
+
         // TO DO : Use path array to get the next turn
         //float l = deviceInfo.getPaths().get(0).getLength();
+
 
         if (!(mTargetPoint == null)) {
 
@@ -393,7 +395,6 @@ public class MainActivity extends Activity {
             float dy = deviceInfo.getY() - mTargetPoint.getY();
             double d = Math.sqrt(Math.pow(dx,2) + Math.pow(dy,2));
             Log.d(TAG, String.format("dx: %f, dy: %f, d: %f", dx, dy, d));
-
 
             if (d < 1) {
 
@@ -454,6 +455,27 @@ public class MainActivity extends Activity {
                     break;
             }
         }
+
+
+
+        // Verbal navigation
+        if(mDeviceInfo.getPaths() != null && mDeviceInfo.getPaths().size() > 0) {
+            RoutePath path = mDeviceInfo.getPaths().get(0);
+//            Log.d("navya", "Path length = " + Float.toString(path.getLength()));
+//            Log.d("navya", "Path type = " + Integer.toString(path.getEvents().get(0).getValue()));
+//            Log.d("navya", "Path pointX = " + Float.toString(path.getPoints().get(2).getX()));
+//            Log.d("navya", "Path pointY = " + Float.toString(path.getPoints().get(2).getY()));
+
+
+            if (path.getEvents().size() > 1 && path.getEvents() != null) {
+                Log.d("navya", "Turn distance : " + path.getEvents().get(1).getDistance());
+                Log.d("navya", "Next turn: " + (path.getEvents().get(0).getType() == 1 ? "Turn left" : "Turn Right"));
+            } else if (path.getEvents() != null){
+                //Log.d("navya", "Turn distance : " + path.getEvents().get(1).getDistance());
+            }
+        }
+
+
 
         // This causes map redrawing
         gui.redrawLocationView();
