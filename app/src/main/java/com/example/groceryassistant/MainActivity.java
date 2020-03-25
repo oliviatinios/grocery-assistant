@@ -1,69 +1,74 @@
 package com.example.groceryassistant;
 
-import androidx.appcompat.app.AppCompatActivity;
+import android.Manifest;
+import android.app.Activity;
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.Context;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.Path;
+import android.graphics.PointF;
+import android.graphics.RectF;
+import android.graphics.Typeface;
+import android.os.Build;
+import android.os.Bundle;
+import android.os.Environment;
+import android.speech.tts.TextToSpeech;
+import android.util.Log;
+import android.view.View;
+import android.view.View.OnLayoutChangeListener;
+import android.view.Window;
+import android.view.WindowManager;
+import android.widget.Button;
+import android.widget.TextView;
+import android.widget.Toast;
+
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
-import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.mobile.client.AWSMobileClient;
 import com.amazonaws.mobile.client.AWSStartupHandler;
 import com.amazonaws.mobile.client.AWSStartupResult;
-import com.amazonaws.mobile.config.AWSConfiguration;
+import com.amazonaws.mobileconnectors.dynamodbv2.dynamodbmapper.DynamoDBMapper;
 import com.amazonaws.mobileconnectors.lex.interactionkit.Response;
 import com.amazonaws.mobileconnectors.lex.interactionkit.config.InteractionConfig;
 import com.amazonaws.mobileconnectors.lex.interactionkit.ui.InteractiveVoiceView;
-import com.amazonaws.mobileconnectors.dynamodbv2.dynamodbmapper.DynamoDBMapper;
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
+import com.navigine.naviginesdk.DeviceInfo;
+import com.navigine.naviginesdk.Location;
+import com.navigine.naviginesdk.LocationPoint;
+import com.navigine.naviginesdk.LocationView;
+import com.navigine.naviginesdk.NavigationThread;
+import com.navigine.naviginesdk.NavigineSDK;
+import com.navigine.naviginesdk.RoutePath;
+import com.navigine.naviginesdk.SubLocation;
+import com.navigine.naviginesdk.Venue;
+import com.navigine.naviginesdk.Zone;
 
-import android.app.*;
-import android.content.*;
-import android.graphics.*;
-import android.os.*;
-import android.speech.tts.TextToSpeech;
-import android.view.*;
-import android.view.View.*;
-import android.widget.*;
-import android.util.*;
-import java.io.*;
-import java.lang.*;
-import java.util.*;
-
-import android.Manifest;
-import android.content.pm.PackageManager;
-import android.os.Bundle;
-import android.util.Log;
-import android.widget.Toast;
-
+import java.io.File;
+import java.util.Calendar;
 import java.util.Locale;
 import java.util.Map;
 
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
-import com.navigine.naviginesdk.*;
-
 public class MainActivity extends Activity {
 
-    private static final String   TAG                     = "MAIN_ACTIVITY";;
+    private static final String   TAG                     = "MAIN_ACTIVITY";
     private static final String   NOTIFICATION_CHANNEL    = "GROCERYASSISTANT_NOTIFICATION_CHANNEL";
-    private static final int      UPDATE_TIMEOUT          = 100;  // milliseconds
     private static final int      ADJUST_TIMEOUT          = 5000; // milliseconds
-    private static final int      ERROR_MESSAGE_TIMEOUT   = 5000; // milliseconds
     private static final boolean  ORIENTATION_ENABLED     = true; // Show device orientation?
     private static final boolean  NOTIFICATIONS_ENABLED   = true; // Show zone notifications?
 
-    // NavigationThread instance
-    private NavigationThread mNavigation            = null;
-
-    // UI Parameters
-    private LocationView  mLocationView             = null;
-    private View          mBackView                 = null;
-    private View          mZoomInView               = null;
-    private View          mZoomOutView              = null;
-    private View          mAdjustModeView           = null;
-    private TextView      mErrorMessageLabel        = null;
-    private Handler       mHandler                  = new Handler();
-    private float         mDisplayDensity           = 0.0f;
-
-    private boolean       mAdjustMode               = false;
-    private long          mAdjustTime               = 0;
+    private Display     gui;
+    private Navigation  nav;
+    private VoiceInterface talk;
 
     // Location parameters
     private Location      mLocation                 = null;
@@ -81,15 +86,13 @@ public class MainActivity extends Activity {
     private RectF   mSelectedVenueRect = null;
     private Zone    mSelectedZone   = null;
 
-
-
     private final int MY_PERMISSIONS_RECORD_AUDIO = 1;
 
     // Declare a DynamoDBMapper object
     private DynamoDBMapper dynamoDBMapper;
 
     // Text to speech
-    private TextToSpeech textToSpeech;
+//    private TextToSpeech textToSpeech;
     private Item navItem;
 
 
@@ -104,92 +107,77 @@ public class MainActivity extends Activity {
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS,
                 WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
 
-        // Setting up GUI parameters
-        mBackView = (View)findViewById(R.id.navigation__back_view);
-        mZoomInView  = (View)findViewById(R.id.navigation__zoom_in_view);
-        mZoomOutView = (View)findViewById(R.id.navigation__zoom_out_view);
-        mAdjustModeView = (View)findViewById(R.id.navigation__adjust_mode_view);
-        mErrorMessageLabel = (TextView)findViewById(R.id.navigation__error_message_label);
+        gui = new Display(
+                (LocationView)findViewById(R.id.navigation__location_view),
+                findViewById(R.id.navigation__back_view),
+                findViewById(R.id.navigation__zoom_in_view),
+                findViewById(R.id.navigation__zoom_out_view),
+                findViewById(R.id.navigation__adjust_mode_view),
+                (TextView)findViewById(R.id.navigation__error_message_label)
+        );
 
-        mBackView.setVisibility(View.INVISIBLE);
-        mZoomInView.setVisibility(View.INVISIBLE);
-        mZoomOutView.setVisibility(View.INVISIBLE);
-        mAdjustModeView.setVisibility(View.INVISIBLE);
-        mErrorMessageLabel.setVisibility(View.GONE);
+        gui.setBackVisibility(View.INVISIBLE);
+        gui.setZoomVisibility(View.INVISIBLE);
+
+        gui.setAdjustVisibility(View.INVISIBLE);
+        gui.setErrorVisibility(View.GONE);
 
         mVenueBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.elm_venue);
 
-        // Initializing location view
-        mLocationView = (LocationView)findViewById(R.id.navigation__location_view);
-        mLocationView.setBackgroundColor(0xffebebeb);
-        mLocationView.setListener
-                (
-                        new LocationView.Listener()
-                        {
-                            @Override public void onClick     ( float x, float y ) { handleClick(x, y);     }
-                            @Override public void onLongClick ( float x, float y ) { handleLongClick(x, y); }
-                            @Override public void onScroll    ( float x, float y, boolean byTouchEvent ) { handleScroll ( x, y,  byTouchEvent ); }
-                            @Override public void onZoom      ( float ratio,      boolean byTouchEvent ) { handleZoom   ( ratio, byTouchEvent ); }
+        LocationView.Listener locationListener = new LocationView.Listener()
+        {
+            @Override public void onClick     ( float x, float y ) { handleClick(x, y);     }
+            @Override public void onLongClick ( float x, float y ) { handleLongClick(x, y); }
+            @Override public void onScroll    ( float x, float y, boolean byTouchEvent ) { handleScroll ( x, y,  byTouchEvent ); }
+            @Override public void onZoom      ( float ratio,      boolean byTouchEvent ) { handleZoom   ( ratio, byTouchEvent ); }
 
-                            @Override public void onDraw(Canvas canvas)
-                            {
-                                drawZones(canvas);
-                                drawPoints(canvas);
-                                drawVenues(canvas);
-                                drawDevice(canvas);
-                            }
-                        }
-                );
+            @Override public void onDraw(Canvas canvas)
+            {
+                drawZones(canvas);
+                drawPoints(canvas);
+                drawVenues(canvas);
+                drawDevice(canvas);
+            }
+        };
 
         // Loading map only when location view size is known
-        mLocationView.addOnLayoutChangeListener
-                (
-                        new OnLayoutChangeListener()
-                        {
-                            @Override public void onLayoutChange(View v, int left, int top, int right, int bottom, int oldLeft, int oldTop, int oldRight, int oldBottom)
-                            {
-                                int width  = right  - left;
-                                int height = bottom - top;
-                                if (width == 0 || height == 0)
-                                    return;
+        OnLayoutChangeListener layoutListener = new OnLayoutChangeListener()
+        {
+            @Override public void onLayoutChange(View v, int left, int top, int right, int bottom, int oldLeft, int oldTop, int oldRight, int oldBottom)
+            {
+                int width  = right  - left;
+                int height = bottom - top;
+                if (width == 0 || height == 0)
+                    return;
 
-                                Log.d(TAG, "Layout chaged: " + width + "x" + height);
+                Log.d(TAG, "Layout chaged: " + width + "x" + height);
 
-                                int oldWidth  = oldRight  - oldLeft;
-                                int oldHeight = oldBottom - oldTop;
-                                if (oldWidth != width || oldHeight != height)
-                                    loadMap();
-                            }
-                        }
-                );
+                int oldWidth  = oldRight  - oldLeft;
+                int oldHeight = oldBottom - oldTop;
+                if (oldWidth != width || oldHeight != height)
+                    loadMap();
+            }
+        };
 
-        mDisplayDensity = getResources().getDisplayMetrics().density;
-        mNavigation     = NavigineSDK.getNavigation();
+        gui.setListeners(locationListener, layoutListener);
+
+        gui.setDisplayDensity(getResources().getDisplayMetrics().density);
+        nav = new Navigation();
 
         // Setting up device listener
-        if (mNavigation != null)
+        DeviceInfo.Listener deviceListener = new DeviceInfo.Listener()
         {
-            mNavigation.setDeviceListener
-                    (
-                            new DeviceInfo.Listener()
-                            {
-                                @Override public void onUpdate(DeviceInfo info) { handleDeviceUpdate(info); }
-                            }
-                    );
-        }
+            @Override public void onUpdate(DeviceInfo info) { handleDeviceUpdate(info); }
+        };
 
         // Setting up zone listener
-        if (mNavigation != null)
+        Zone.Listener zoneListener = new Zone.Listener()
         {
-            mNavigation.setZoneListener
-                    (
-                            new Zone.Listener()
-                            {
-                                @Override public void onEnterZone(Zone z) { handleEnterZone(z); }
-                                @Override public void onLeaveZone(Zone z) { handleLeaveZone(z); }
-                            }
-                    );
-        }
+            @Override public void onEnterZone(Zone z) { handleEnterZone(z); }
+            @Override public void onLeaveZone(Zone z) { handleLeaveZone(z); }
+        };
+
+        nav.setListeners(deviceListener, zoneListener);
 
         if (NOTIFICATIONS_ENABLED)
         {
@@ -198,27 +186,27 @@ public class MainActivity extends Activity {
                 notificationManager.createNotificationChannel(new NotificationChannel(NOTIFICATION_CHANNEL, "default",
                         NotificationManager.IMPORTANCE_LOW));
         }
-        //setContentView(R.layout.activity_main);
 
         connectToAws();
         requestAudioPermissions();
 
-        textToSpeech = new TextToSpeech(getApplicationContext(), new TextToSpeech.OnInitListener() {
-            @Override
-            public void onInit(int status) {
-                if(status != TextToSpeech.ERROR) {
-                    textToSpeech.setLanguage(Locale.CANADA);
-                }
-            }
-        });
+        talk = new VoiceInterface(getApplicationContext());
+//        textToSpeech = new TextToSpeech(getApplicationContext(), new TextToSpeech.OnInitListener() {
+//            @Override
+//            public void onInit(int status) {
+//                if(status != TextToSpeech.ERROR) {
+//                    textToSpeech.setLanguage(Locale.CANADA);
+//                }
+//            }
+//        });
     }
 
     @Override public void onDestroy()
     {
-        if (mNavigation != null)
+        if (!nav.isNull())
         {
             NavigineSDK.finish();
-            mNavigation = null;
+            nav.makeNull();
         }
 
         super.onDestroy();
@@ -231,58 +219,28 @@ public class MainActivity extends Activity {
 
     public void toggleAdjustMode(View v)
     {
-        mAdjustMode = !mAdjustMode;
-        mAdjustTime = 0;
-        Button adjustModeButton = (Button)findViewById(R.id.navigation__adjust_mode_button);
-        adjustModeButton.setBackgroundResource(mAdjustMode ?
+        nav.toggleMode();
+        nav.setTime(0);
+        Button adjustModeButton = findViewById(R.id.navigation__adjust_mode_button);
+        adjustModeButton.setBackgroundResource(nav.getMode() ?
                 R.drawable.btn_adjust_mode_on :
                 R.drawable.btn_adjust_mode_off);
-        mLocationView.redraw();
-    }
-
-    public void onNextFloor(View v)
-    {
-        if (loadNextSubLocation())
-            mAdjustTime = System.currentTimeMillis() + ADJUST_TIMEOUT;
-    }
-
-    public void onPrevFloor(View v)
-    {
-        if (loadPrevSubLocation())
-            mAdjustTime = System.currentTimeMillis() + ADJUST_TIMEOUT;
+        gui.redrawLocationView();
     }
 
     public void onZoomIn(View v)
     {
-        mLocationView.zoomBy(1.25f);
+        gui.zoomLocationView(1.25f);
     }
 
     public void onZoomOut(View v)
     {
-        mLocationView.zoomBy(0.8f);
-    }
-
-    public void onMakeRoute(View v)
-    {
-        if (mNavigation == null)
-            return;
-
-        if (mPinPoint == null)
-            return;
-
-        mTargetPoint  = mPinPoint;
-        mTargetVenue  = null;
-        mPinPoint     = null;
-        mPinPointRect = null;
-
-        mNavigation.setTarget(mTargetPoint);
-        mBackView.setVisibility(View.VISIBLE);
-        mLocationView.redraw();
+        gui.zoomLocationView(0.8f);
     }
 
     public void onCancelRoute(View v)
     {
-        if (mNavigation == null)
+        if (nav.isNull())
             return;
 
         mTargetPoint  = null;
@@ -290,9 +248,9 @@ public class MainActivity extends Activity {
         mPinPoint     = null;
         mPinPointRect = null;
 
-        mNavigation.cancelTargets();
-        mBackView.setVisibility(View.GONE);
-        mLocationView.redraw();
+        nav.cancelTargets();
+        gui.setBackVisibility(View.GONE);
+        gui.redrawLocationView();
     }
 
     private void handleClick(float x, float y)
@@ -314,8 +272,8 @@ public class MainActivity extends Activity {
                 mTargetVenue  = null;
                 mPinPoint     = null;
                 mPinPointRect = null;
-                mNavigation.setTarget(mTargetPoint);
-                mBackView.setVisibility(View.VISIBLE);
+                nav.setTarget(mTargetPoint);
+                gui.setBackVisibility(View.VISIBLE);
                 return;
             }
             cancelPin();
@@ -328,8 +286,8 @@ public class MainActivity extends Activity {
             {
                 mTargetVenue = mSelectedVenue;
                 mTargetPoint = null;
-                mNavigation.setTarget(new LocationPoint(mLocation.getId(), subLoc.getId(), mTargetVenue.getX(), mTargetVenue.getY()));
-                mBackView.setVisibility(View.VISIBLE);
+                nav.setTarget(new LocationPoint(mLocation.getId(), subLoc.getId(), mTargetVenue.getX(), mTargetVenue.getY()));
+                gui.setBackVisibility(View.VISIBLE);
             }
             cancelVenue();
             return;
@@ -347,12 +305,14 @@ public class MainActivity extends Activity {
                 mSelectedZone = (mSelectedZone == Z) ? null : Z;
         }
 
-        mLocationView.redraw();
+        gui.redrawLocationView();
     }
 
     public void onNav(float x, float y) {
 
-        if (mNavigation == null)
+        Log.d("Debug:onNav", "x = " + x + ", y = " + y);
+
+        if (nav.isNull())
             return;
 
         SubLocation subLoc = mLocation.getSubLocations().get(mCurrentSubLocationIndex);
@@ -362,29 +322,29 @@ public class MainActivity extends Activity {
         mPinPoint     = null;
         mPinPointRect = null;
 
-        mNavigation.setTarget(mTargetPoint);
-        mBackView.setVisibility(View.VISIBLE);
-        mLocationView.redraw();
+        nav.setTarget(mTargetPoint);
+        gui.setBackVisibility(View.VISIBLE);
+        gui.redrawLocationView();
 
     }
 
     private void handleLongClick(float x, float y)
     {
         Log.d(TAG, String.format(Locale.ENGLISH, "Long click at (%.2f, %.2f)", x, y));
-        makePin(mLocationView.getAbsCoordinates(x, y));
+        makePin(gui.getAbsCoordinates(x, y));
         cancelVenue();
     }
 
     private void handleScroll(float x, float y, boolean byTouchEvent)
     {
         if (byTouchEvent)
-            mAdjustTime = NavigineSDK.currentTimeMillis() + ADJUST_TIMEOUT;
+            nav.setTime(NavigineSDK.currentTimeMillis() + ADJUST_TIMEOUT);
     }
 
     private void handleZoom(float ratio, boolean byTouchEvent)
     {
         if (byTouchEvent)
-            mAdjustTime = NavigineSDK.currentTimeMillis() + ADJUST_TIMEOUT;
+            nav.setTime(NavigineSDK.currentTimeMillis() + ADJUST_TIMEOUT);
     }
 
     private void handleEnterZone(Zone z)
@@ -429,10 +389,10 @@ public class MainActivity extends Activity {
 
         if (!(mTargetPoint == null)) {
 
-        float dx = deviceInfo.getX() - mTargetPoint.getX();
-        float dy = deviceInfo.getY() - mTargetPoint.getY();
-        double d = Math.sqrt(Math.pow(dx,2) + Math.pow(dy,2));
-        Log.d(TAG, String.format("dx: %f, dy: %f, d: %f", dx, dy, d));
+            float dx = deviceInfo.getX() - mTargetPoint.getX();
+            float dy = deviceInfo.getY() - mTargetPoint.getY();
+            double d = Math.sqrt(Math.pow(dx,2) + Math.pow(dy,2));
+            Log.d(TAG, String.format("dx: %f, dy: %f, d: %f", dx, dy, d));
 
 
             if (d < 1) {
@@ -442,14 +402,14 @@ public class MainActivity extends Activity {
                 mPinPoint     = null;
                 mPinPointRect = null;
 
-                mNavigation.cancelTargets();
-                mBackView.setVisibility(View.GONE);
-                mLocationView.redraw();
+                nav.cancelTargets();
+                gui.setBackVisibility(View.GONE);
+                gui.redrawLocationView();
 
                 if (navItem != null) {
-                    textToSpeech.speak("You have arrived at the " + navItem.getName(), TextToSpeech.QUEUE_FLUSH, null);
+                    talk.speak("You have arrived at the " + navItem.getName());
                 } else {
-                    textToSpeech.speak("You have arrived", TextToSpeech.QUEUE_FLUSH, null);
+                    talk.speak("You have arrived");
                 }
                 navItem = null;
                 Log.d(TAG, "Navigation Ended");
@@ -466,28 +426,28 @@ public class MainActivity extends Activity {
 
         if (mDeviceInfo.isValid())
         {
-            cancelErrorMessage();
-            mBackView.setVisibility(mTargetPoint != null || mTargetVenue != null ?
+            gui.setErrorVisibility(View.GONE);
+            gui.setBackVisibility(mTargetPoint != null || mTargetVenue != null ?
                     View.VISIBLE : View.GONE);
-            if (mAdjustMode)
+            if (nav.getMode())
                 adjustDevice();
         }
         else
         {
-            mBackView.setVisibility(View.GONE);
+            gui.setBackVisibility(View.GONE);
             switch (mDeviceInfo.getErrorCode())
             {
                 case 4:
-                    setErrorMessage("You are out of navigation zone! Please, check that your bluetooth is enabled!");
+                    gui.setErrorMessage("You are out of navigation zone! Please, check that your bluetooth is enabled!");
                     break;
 
                 case 8:
                 case 30:
-                    setErrorMessage("Not enough beacons on the location! Please, add more beacons!");
+                    gui.setErrorMessage("Not enough beacons on the location! Please, add more beacons!");
                     break;
 
                 default:
-                    setErrorMessage(String.format(Locale.ENGLISH,
+                    gui.setErrorMessage(String.format(Locale.ENGLISH,
                             "Something is wrong with location '%s' (error code %d)! " +
                                     "Please, contact technical support!",
                             mLocation.getName(), mDeviceInfo.getErrorCode()));
@@ -496,29 +456,18 @@ public class MainActivity extends Activity {
         }
 
         // This causes map redrawing
-        mLocationView.redraw();
-    }
-
-    private void setErrorMessage(String message)
-    {
-        mErrorMessageLabel.setText(message);
-        mErrorMessageLabel.setVisibility(View.VISIBLE);
-    }
-
-    private void cancelErrorMessage()
-    {
-        mErrorMessageLabel.setVisibility(View.GONE);
+        gui.redrawLocationView();
     }
 
     private boolean loadMap()
     {
-        if (mNavigation == null)
+        if (nav.isNull())
         {
             Log.e(TAG, "Can't load map! Navigine SDK is not available!");
             return false;
         }
 
-        mLocation = mNavigation.getLocation();
+        mLocation = nav.getLocation();
         mCurrentSubLocationIndex = -1;
 
         if (mLocation == null)
@@ -542,22 +491,22 @@ public class MainActivity extends Activity {
         }
 
 
-        mZoomInView.setVisibility(View.VISIBLE);
-        mZoomOutView.setVisibility(View.VISIBLE);
-        mAdjustModeView.setVisibility(View.VISIBLE);
+        gui.setZoomVisibility(View.VISIBLE);
+        gui.setZoomVisibility(View.VISIBLE);
+        gui.setAdjustVisibility(View.GONE);
 
-        mNavigation.setMode(NavigationThread.MODE_NORMAL);
+        nav.setMode(NavigationThread.MODE_NORMAL);
 
         if (D.WRITE_LOGS)
-            mNavigation.setLogFile(getLogFile("log"));
+            nav.setLogFile(getLogFile("log"));
 
-        mLocationView.redraw();
+        gui.redrawLocationView();
         return true;
     }
 
     private boolean loadSubLocation(int index)
     {
-        if (mNavigation == null)
+        if (nav.isNull())
             return false;
 
         if (mLocation == null || index < 0 || index >= mLocation.getSubLocations().size())
@@ -572,40 +521,26 @@ public class MainActivity extends Activity {
             return false;
         }
 
-        if (!mLocationView.loadSubLocation(subLoc))
+        if(!gui.loadSubLocation(subLoc))
         {
             Log.e(TAG, "Loading sublocation failed: invalid image");
             return false;
         }
 
-        float viewWidth  = mLocationView.getWidth();
-        float viewHeight = mLocationView.getHeight();
+        float viewWidth = gui.getLocationWidth();
+        float viewHeight = gui.getLocationHeight();
         float minZoomFactor = Math.min(viewWidth / subLoc.getWidth(), viewHeight / subLoc.getHeight());
         float maxZoomFactor = LocationView.ZOOM_FACTOR_MAX;
-        mLocationView.setZoomRange(minZoomFactor, maxZoomFactor);
-        mLocationView.setZoomFactor(minZoomFactor);
+
+        gui.setZoomParameters(minZoomFactor, maxZoomFactor);
         Log.d(TAG, String.format(Locale.ENGLISH, "View size: %.1f x %.1f", viewWidth, viewHeight));
 
-        mAdjustTime = 0;
+        nav.setTime(0);
         mCurrentSubLocationIndex = index;
 
         cancelVenue();
-        mLocationView.redraw();
+        gui.redrawLocationView();
         return true;
-    }
-
-    private boolean loadNextSubLocation()
-    {
-        if (mLocation == null || mCurrentSubLocationIndex < 0)
-            return false;
-        return loadSubLocation(mCurrentSubLocationIndex + 1);
-    }
-
-    private boolean loadPrevSubLocation()
-    {
-        if (mLocation == null || mCurrentSubLocationIndex < 0)
-            return false;
-        return loadSubLocation(mCurrentSubLocationIndex - 1);
     }
 
     private void makePin(PointF P)
@@ -632,7 +567,7 @@ public class MainActivity extends Activity {
 
         mPinPoint = new LocationPoint(mLocation.getId(), subLoc.getId(), P.x, P.y);
         mPinPointRect = new RectF();
-        mLocationView.redraw();
+        gui.redrawLocationView();
     }
 
     private void cancelPin()
@@ -649,13 +584,13 @@ public class MainActivity extends Activity {
 
         mPinPoint = null;
         mPinPointRect = null;
-        mLocationView.redraw();
+        gui.redrawLocationView();
     }
 
     private void cancelVenue()
     {
         mSelectedVenue = null;
-        mLocationView.redraw();
+        gui.redrawLocationView();
     }
 
     private Venue getVenueAt(float x, float y)
@@ -673,9 +608,10 @@ public class MainActivity extends Activity {
         for(int i = 0; i < subLoc.getVenues().size(); ++i)
         {
             Venue v = subLoc.getVenues().get(i);
-            PointF P = mLocationView.getScreenCoordinates(v.getX(), v.getY());
+            PointF P = gui.getScreenCoordinates(v.getX(), v.getY());
+
             float d = Math.abs(x - P.x) + Math.abs(y - P.y);
-            if (d < 30.0f * mDisplayDensity && d < d0)
+            if (d < 30.0f * gui.getDisplayDensity() && d < d0)
             {
                 v0 = v;
                 d0 = d;
@@ -694,7 +630,7 @@ public class MainActivity extends Activity {
         if (subLoc == null)
             return null;
 
-        PointF P = mLocationView.getAbsCoordinates(x, y);
+        PointF P = gui.getAbsCoordinates(x, y);
         LocationPoint LP = new LocationPoint(mLocation.getId(), subLoc.getId(), P.x, P.y);
 
         for(int i = 0; i < subLoc.getZones().size(); ++i)
@@ -721,7 +657,7 @@ public class MainActivity extends Activity {
         final int solidColor  = Color.argb(255, 64, 163, 205);  // Light-blue color
         final int circleColor = Color.argb(127, 64, 163, 205);  // Semi-transparent light-blue color
         final int arrowColor  = Color.argb(255, 255, 255, 255); // White color
-        final float dp        = mDisplayDensity;
+        final float dp        = gui.getDisplayDensity();
         final float textSize  = 16 * dp;
 
         // Preparing paints
@@ -733,7 +669,7 @@ public class MainActivity extends Activity {
         // Drawing pin point (if it exists and belongs to the current sublocation)
         if (mPinPoint != null && mPinPoint.subLocation == subLoc.getId())
         {
-            final PointF T = mLocationView.getScreenCoordinates(mPinPoint);
+            final PointF T = gui.getScreenCoordinates(mPinPoint);
             final float tRadius = 10 * dp;
 
             paint.setARGB(255, 0, 0, 0);
@@ -763,7 +699,7 @@ public class MainActivity extends Activity {
         // Drawing target point (if it exists and belongs to the current sublocation)
         if (mTargetPoint != null && mTargetPoint.subLocation == subLoc.getId())
         {
-            final PointF T = mLocationView.getScreenCoordinates(mTargetPoint);
+            final PointF T = gui.getScreenCoordinates(mTargetPoint);
             final float tRadius = 10 * dp;
 
             paint.setARGB(255, 0, 0, 0);
@@ -782,7 +718,7 @@ public class MainActivity extends Activity {
 
         SubLocation subLoc = mLocation.getSubLocations().get(mCurrentSubLocationIndex);
 
-        final float dp = mDisplayDensity;
+        final float dp = gui.getDisplayDensity();
         final float textSize  = 16 * dp;
         final float venueSize = 30 * dp;
         final int   venueColor = Color.argb(255, 0xCD, 0x88, 0x50); // Venue color
@@ -800,7 +736,7 @@ public class MainActivity extends Activity {
             if (v.getSubLocationId() != subLoc.getId())
                 continue;
 
-            final PointF P = mLocationView.getScreenCoordinates(v.getX(), v.getY());
+            final PointF P = gui.getScreenCoordinates(v.getX(), v.getY());
             final float x0 = P.x - venueSize/2;
             final float y0 = P.y - venueSize/2;
             final float x1 = P.x + venueSize/2;
@@ -810,7 +746,7 @@ public class MainActivity extends Activity {
 
         if (mSelectedVenue != null)
         {
-            final PointF T = mLocationView.getScreenCoordinates(mSelectedVenue.getX(), mSelectedVenue.getY());
+            final PointF T = gui.getScreenCoordinates(mSelectedVenue.getX(), mSelectedVenue.getY());
             final float textWidth = paint.measureText(mSelectedVenue.getName());
 
             final float h  = 50 * dp;
@@ -852,13 +788,13 @@ public class MainActivity extends Activity {
 
             Path path = new Path();
             final LocationPoint P0 = Z.getPoints().get(0);
-            final PointF        Q0 = mLocationView.getScreenCoordinates(P0);
+            final PointF        Q0 = gui.getScreenCoordinates(P0);
             path.moveTo(Q0.x, Q0.y);
 
             for(int j = 0; j < Z.getPoints().size(); ++j)
             {
                 final LocationPoint P = Z.getPoints().get((j + 1) % Z.getPoints().size());
-                final PointF        Q = mLocationView.getScreenCoordinates(P);
+                final PointF        Q = gui.getScreenCoordinates(P);
                 path.lineTo(Q.x, Q.y);
             }
 
@@ -890,7 +826,7 @@ public class MainActivity extends Activity {
         final int solidColor  = Color.argb(255, 64,  163, 205); // Light-blue color
         final int circleColor = Color.argb(127, 64,  163, 205); // Semi-transparent light-blue color
         final int arrowColor  = Color.argb(255, 255, 255, 255); // White color
-        final float dp = mDisplayDensity;
+        final float dp = gui.getDisplayDensity();
 
         // Preparing paints
         Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -912,8 +848,8 @@ public class MainActivity extends Activity {
                     if (P.subLocation == subLoc.getId() && Q.subLocation == subLoc.getId())
                     {
                         paint.setStrokeWidth(3 * dp);
-                        PointF P1 = mLocationView.getScreenCoordinates(P);
-                        PointF Q1 = mLocationView.getScreenCoordinates(Q);
+                        PointF P1 = gui.getScreenCoordinates(P);
+                        PointF Q1 = gui.getScreenCoordinates(Q);
                         canvas.drawLine(P1.x, P1.y, Q1.x, Q1.y, paint);
                     }
                 }
@@ -932,10 +868,10 @@ public class MainActivity extends Activity {
         final float angle = mDeviceInfo.getAzimuth();
         final float sinA = (float)Math.sin(angle);
         final float cosA = (float)Math.cos(angle);
-        final float radius  = mLocationView.getScreenLengthX(r);  // External radius: navigation-determined, transparent
+        final float radius  = gui.getScreenLengthX(r);
         final float radius1 = 25 * dp;                            // Internal radius: fixed, solid
 
-        PointF O = mLocationView.getScreenCoordinates(x, y);
+        PointF O = gui.getScreenCoordinates(x, y);
         PointF P = new PointF(O.x - radius1 * sinA * 0.22f, O.y + radius1 * cosA * 0.22f);
         PointF Q = new PointF(O.x + radius1 * sinA * 0.55f, O.y - radius1 * cosA * 0.55f);
         PointF R = new PointF(O.x + radius1 * cosA * 0.44f - radius1 * sinA * 0.55f, O.y + radius1 * sinA * 0.44f + radius1 * cosA * 0.55f);
@@ -977,7 +913,7 @@ public class MainActivity extends Activity {
         long timeNow = System.currentTimeMillis();
 
         // Adjust map, if necessary
-        if (timeNow >= mAdjustTime)
+        if (timeNow >= nav.getTime())
         {
             // Firstly, set the correct sublocation
             SubLocation subLoc = mLocation.getSubLocations().get(mCurrentSubLocationIndex);
@@ -989,11 +925,11 @@ public class MainActivity extends Activity {
             }
 
             // Secondly, adjust device to the center of the screen
-            PointF center = mLocationView.getScreenCoordinates(mDeviceInfo.getX(), mDeviceInfo.getY());
-            float deltaX  = mLocationView.getWidth()  / 2 - center.x;
-            float deltaY  = mLocationView.getHeight() / 2 - center.y;
-            mAdjustTime   = timeNow;
-            mLocationView.scrollBy(deltaX, deltaY);
+            PointF center = gui.getScreenCoordinates(mDeviceInfo.getX(), mDeviceInfo.getY());
+            float deltaX  = gui.getLocationWidth()  / 2 - center.x;
+            float deltaY  = gui.getLocationHeight() / 2 - center.y;
+            nav.setTime(timeNow);
+            gui.scrollByLocation(deltaX, deltaY);
         }
     }
 
@@ -1076,7 +1012,7 @@ public class MainActivity extends Activity {
     //Handling callback
     @Override
     public void onRequestPermissionsResult(int requestCode,
-                                           String permissions[], int[] grantResults) {
+                                           String[] permissions, int[] grantResults) {
         switch (requestCode) {
             case MY_PERMISSIONS_RECORD_AUDIO: {
                 if (grantResults.length > 0
@@ -1097,13 +1033,12 @@ public class MainActivity extends Activity {
         Item item = mapper.load(Item.class, name);
         Log.d(TAG,item.toString());
         navItem = item;
-        textToSpeech.speak("Calculating route to the "
-                + navItem.getName(), TextToSpeech.QUEUE_FLUSH, null);
+        //talk.speak("Calculating route to the " + navItem.getName());
     }
 
     public void initInteractiveVoiceView(){
         InteractiveVoiceView voiceView =
-                (InteractiveVoiceView) findViewById(R.id.voiceInterface);
+                findViewById(R.id.voiceInterface);
 
         voiceView.setInteractiveVoiceListener(
                 new InteractiveVoiceView.InteractiveVoiceListener() {
@@ -1122,7 +1057,7 @@ public class MainActivity extends Activity {
                                 public void run() {
                                     try {
                                         getItem(dynamoDBMapper, shoppingListItem);
-                                        onNav(navItem.getPositionX(), navItem.getPositionY());
+                                        //onNav(navItem.getPositionX(), navItem.getPositionY());
 
                                     }
                                     catch (Throwable t) {
@@ -1133,9 +1068,13 @@ public class MainActivity extends Activity {
                             };
                             Thread mythread = new Thread(runnable);
                             mythread.start();
+                            // TODO Fix loop
+                            while(navItem == null) {}
+
+                            onNav(navItem.getPositionX(), navItem.getPositionY());
                         }
                     }
-
+                    //onNav(navItem.getPositionX(), navItem.getPositionY());
                     @Override
                     public void onResponse(Response response) {
                         Log.d(TAG, "User input: " + response.getInputTranscript());

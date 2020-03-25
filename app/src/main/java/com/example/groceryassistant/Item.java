@@ -31,7 +31,7 @@ public class Item {
 
     @DynamoDBAttribute(attributeName = "position_y")
     public float getPositionY() {
-        return positionX;
+        return positionY;
     }
 
     public void setPositionY(float positionY) {
