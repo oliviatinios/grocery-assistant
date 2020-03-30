@@ -18,9 +18,12 @@ import android.graphics.Path;
 import android.graphics.PointF;
 import android.graphics.RectF;
 import android.graphics.Typeface;
+import android.media.AudioManager;
+import android.media.MediaPlayer;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.StrictMode;
 import android.speech.tts.TextToSpeech;
 import android.util.Log;
 import android.view.View;
@@ -34,6 +37,8 @@ import android.widget.Toast;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import com.amazonaws.auth.AWSCredentialsProvider;
+import com.amazonaws.auth.CognitoCachingCredentialsProvider;
 import com.amazonaws.mobile.client.AWSMobileClient;
 import com.amazonaws.mobile.client.AWSStartupHandler;
 import com.amazonaws.mobile.client.AWSStartupResult;
@@ -41,7 +46,14 @@ import com.amazonaws.mobileconnectors.dynamodbv2.dynamodbmapper.DynamoDBMapper;
 import com.amazonaws.mobileconnectors.lex.interactionkit.Response;
 import com.amazonaws.mobileconnectors.lex.interactionkit.config.InteractionConfig;
 import com.amazonaws.mobileconnectors.lex.interactionkit.ui.InteractiveVoiceView;
+import com.amazonaws.regions.Regions;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
+import com.amazonaws.services.polly.AmazonPollyPresigningClient;
+import com.amazonaws.services.polly.model.DescribeVoicesRequest;
+import com.amazonaws.services.polly.model.DescribeVoicesResult;
+import com.amazonaws.services.polly.model.OutputFormat;
+import com.amazonaws.services.polly.model.SynthesizeSpeechPresignRequest;
+import com.amazonaws.services.polly.model.Voice;
 import com.navigine.naviginesdk.DeviceInfo;
 import com.navigine.naviginesdk.Location;
 import com.navigine.naviginesdk.LocationPoint;
@@ -54,7 +66,10 @@ import com.navigine.naviginesdk.Venue;
 import com.navigine.naviginesdk.Zone;
 
 import java.io.File;
+import java.io.IOException;
+import java.net.URL;
 import java.util.Calendar;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -94,7 +109,6 @@ public class MainActivity extends Activity {
     // Text to speech
 //    private TextToSpeech textToSpeech;
     private Item navItem;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -190,7 +204,7 @@ public class MainActivity extends Activity {
         connectToAws();
         requestAudioPermissions();
 
-        talk = new VoiceInterface(getApplicationContext());
+        talk = new VoiceInterface();
 //        textToSpeech = new TextToSpeech(getApplicationContext(), new TextToSpeech.OnInitListener() {
 //            @Override
 //            public void onInit(int status) {
@@ -231,11 +245,13 @@ public class MainActivity extends Activity {
     public void onZoomIn(View v)
     {
         gui.zoomLocationView(1.25f);
+//        talktalk("ZOOM IN AMAZON VOICE!");
     }
 
     public void onZoomOut(View v)
     {
         gui.zoomLocationView(0.8f);
+        talk.speak("ZOOM OUT GOOGLE VOICE!");
     }
 
     public void onCancelRoute(View v)
@@ -1098,4 +1114,6 @@ public class MainActivity extends Activity {
                 .setAwsRegion(getApplicationContext()
                         .getString(R.string.aws_region));
     }
+
+
 }
