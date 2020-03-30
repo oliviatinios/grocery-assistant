@@ -4,6 +4,7 @@ import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.StrictMode;
 import android.util.Log;
+import android.view.View;
 
 import com.amazonaws.mobile.client.AWSMobileClient;
 import com.amazonaws.services.polly.AmazonPollyPresigningClient;
@@ -21,9 +22,9 @@ import static android.content.ContentValues.TAG;
 
 public class VoiceInterface {
 
-
     private List<Voice> voices;
     private AmazonPollyPresigningClient client;
+    private MediaPlayer mediaPlayer;
 
     private int VOICE_NUMBER = 12;
 
@@ -54,17 +55,22 @@ public class VoiceInterface {
         });
         thread.start();
 
+        // Set up media player
+        setupNewMediaPlayer();
+
     }
 
     void speak(String text) {
+        // Set the chosen voice
+        Voice selectedVoice = voices.get(VOICE_NUMBER);
 
         // Create speech synthesis request.
         SynthesizeSpeechPresignRequest synthesizeSpeechPresignRequest =
                 new SynthesizeSpeechPresignRequest()
-                        // Set the text to synthesize.
+                        // Set text to synthesize.
                         .withText(text)
-                        // Select voice for synthesis.
-                        .withVoiceId(voices.get(VOICE_NUMBER).getId()) // "Joanna"
+                        // Set voice selected by the user.
+                        .withVoiceId(selectedVoice.getId())
                         // Set format to MP3.
                         .withOutputFormat(OutputFormat.Mp3);
 
@@ -72,41 +78,47 @@ public class VoiceInterface {
         URL presignedSynthesizeSpeechUrl =
                 client.getPresignedSynthesizeSpeechUrl(synthesizeSpeechPresignRequest);
 
-        // Use MediaPlayer: https://developer.android.com/guide/topics/media/mediaplayer.html
+        Log.i(TAG, "Playing speech from presigned URL: " + presignedSynthesizeSpeechUrl);
 
         // Create a media player to play the synthesized audio stream.
-        MediaPlayer mediaPlayer = new MediaPlayer();
+        if (mediaPlayer.isPlaying()) {
+            setupNewMediaPlayer();
+        }
         mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
 
         try {
             // Set media player's data source to previously obtained URL.
             mediaPlayer.setDataSource(presignedSynthesizeSpeechUrl.toString());
-        } catch (
-                IOException e) {
+        } catch (IOException e) {
             Log.e(TAG, "Unable to set data source for the media player! " + e.getMessage());
         }
 
-        // Prepare the MediaPlayer asynchronously (since the data source is a network stream).
+        // Start the playback asynchronously (since the data source is a network stream).
         mediaPlayer.prepareAsync();
 
-        // Set the callback to start the MediaPlayer when it's prepared.
+    }
+
+    void setupNewMediaPlayer() {
+        mediaPlayer = new MediaPlayer();
+        mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+            @Override
+            public void onCompletion(MediaPlayer mp) {
+                mp.release();
+                setupNewMediaPlayer();
+            }
+        });
         mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
             @Override
             public void onPrepared(MediaPlayer mp) {
                 mp.start();
             }
         });
-
-        // Set the callback to release the MediaPlayer after playback is completed.
-        mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+        mediaPlayer.setOnErrorListener(new MediaPlayer.OnErrorListener() {
             @Override
-            public void onCompletion(MediaPlayer mp) {
-                mp.release();
+            public boolean onError(MediaPlayer mp, int what, int extra) {
+                return false;
             }
         });
-
     }
-
-
 
 }

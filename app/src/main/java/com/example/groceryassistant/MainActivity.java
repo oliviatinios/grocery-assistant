@@ -65,9 +65,9 @@ public class MainActivity extends Activity {
     private static final boolean  ORIENTATION_ENABLED     = true; // Show device orientation?
     private static final boolean  NOTIFICATIONS_ENABLED   = true; // Show zone notifications?
 
-    private Display     gui;
-    private Navigation  nav;
-    private VoiceInterface talk;
+    private Display         gui;
+    private Navigation      nav;
+    private VoiceInterface  talk;
 
     // Location parameters
     private Location      mLocation                 = null;
@@ -188,14 +188,6 @@ public class MainActivity extends Activity {
         requestAudioPermissions();
 
         talk = new VoiceInterface();
-//        textToSpeech = new TextToSpeech(getApplicationContext(), new TextToSpeech.OnInitListener() {
-//            @Override
-//            public void onInit(int status) {
-//                if(status != TextToSpeech.ERROR) {
-//                    textToSpeech.setLanguage(Locale.CANADA);
-//                }
-//            }
-//        });
     }
 
     @Override public void onDestroy()
