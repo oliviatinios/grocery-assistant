@@ -1,10 +1,8 @@
 package com.example.groceryassistant;
 
-import android.content.Context;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.StrictMode;
-import android.speech.tts.TextToSpeech;
 import android.util.Log;
 
 import com.amazonaws.mobile.client.AWSMobileClient;
@@ -18,55 +16,44 @@ import com.amazonaws.services.polly.model.Voice;
 import java.io.IOException;
 import java.net.URL;
 import java.util.List;
-import java.util.Locale;
 
 import static android.content.ContentValues.TAG;
 
 public class VoiceInterface {
 
-//    private TextToSpeech textToSpeech;
-//
-//    VoiceInterface(Context context) {
-//        textToSpeech = new TextToSpeech(context, new TextToSpeech.OnInitListener() {
-//            @Override
-//            public void onInit(int status) {
-//                if(status != TextToSpeech.ERROR) {
-//                    textToSpeech.setLanguage(Locale.CANADA);
-//                }
-//            }
-//        });
-//
-//    }
-//
-//    void speak(String text) {
-//        textToSpeech.speak(text, TextToSpeech.QUEUE_FLUSH, null);
-//    }
 
     private List<Voice> voices;
     private AmazonPollyPresigningClient client;
+
+    private int VOICE_NUMBER = 12;
 
     VoiceInterface() {
         // Create a client that supports generation of presigned URLs.
         client = new AmazonPollyPresigningClient(AWSMobileClient.getInstance().getCredentialsProvider());
 
         // Create describe voices request.
-        DescribeVoicesRequest describeVoicesRequest = new DescribeVoicesRequest();
+        final DescribeVoicesRequest describeVoicesRequest = new DescribeVoicesRequest();
 
-        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
-        StrictMode.setThreadPolicy(policy);
+        Thread thread = new Thread(new Runnable(){
+            @Override
+            public void run() {
+                try {
+                    // Synchronously ask the Polly Service to describe available TTS voices.
+                    DescribeVoicesResult describeVoicesResult = client.describeVoices(describeVoicesRequest);
 
-        try {
-            // Synchronously ask the Polly Service to describe available TTS voices.
-            DescribeVoicesResult describeVoicesResult = client.describeVoices(describeVoicesRequest);
+                    // Get list of voices from the result.
+                    voices = describeVoicesResult.getVoices();
 
-            // Get list of voices from the result.
-            voices = describeVoicesResult.getVoices();
+                    // Log a message with a list of available TTS voices.
+                    Log.i(TAG, "Available Polly voices: " + voices);
 
-            // Log a message with a list of available TTS voices.
-            Log.i(TAG, "Available Polly voices: " + voices);
-        } catch (RuntimeException e) {
-            Log.e(TAG, "Unable to get available voices.", e);
-        }
+                } catch (Exception e) {
+                    Log.e(TAG, e.getMessage());
+                }
+            }
+        });
+        thread.start();
+
     }
 
     void speak(String text) {
@@ -77,7 +64,7 @@ public class VoiceInterface {
                         // Set the text to synthesize.
                         .withText(text)
                         // Select voice for synthesis.
-                        .withVoiceId(voices.get(0).getId()) // "Joanna"
+                        .withVoiceId(voices.get(VOICE_NUMBER).getId()) // "Joanna"
                         // Set format to MP3.
                         .withOutputFormat(OutputFormat.Mp3);
 
