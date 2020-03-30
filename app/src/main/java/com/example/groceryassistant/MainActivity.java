@@ -24,6 +24,7 @@ import android.net.NetworkInfo;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Vibrator;
 import android.speech.tts.TextToSpeech;
 import android.util.Log;
 import android.view.View;
@@ -230,13 +231,11 @@ public class MainActivity extends Activity {
     public void onZoomIn(View v)
     {
         gui.zoomLocationView(1.25f);
-        talk.speak("zoom in");
     }
 
     public void onZoomOut(View v)
     {
         gui.zoomLocationView(0.8f);
-        talk.speak("zoom out");
     }
 
     public void onCancelRoute(View v)
@@ -331,15 +330,15 @@ public class MainActivity extends Activity {
 
     private void handleLongClick(float x, float y)
     {
+        // Vibrate voice recording pattern
+        Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+        long[] pattern = {0,100,50,100};
+        v.vibrate(pattern, -1);
+
+        // Perform click on voice interface
+        findViewById(R.id.voiceInterface).performClick();
+
         Log.d(TAG, String.format(Locale.ENGLISH, "Long click at (%.2f, %.2f)", x, y));
-//        makePin(gui.getAbsCoordinates(x, y));
-//        cancelVenue();
-
-        talk.speak(String.format("long click at x = %.2f, y = %.2f", x, y));
-
-
-
-
     }
 
     private void handleScroll(float x, float y, boolean byTouchEvent)
@@ -1092,6 +1091,7 @@ public class MainActivity extends Activity {
                     public void onError(String responseText, Exception e) {
                         Log.e(TAG, "Error: " + responseText, e);
                     }
+
                 });
 
         voiceView.getViewAdapter().setCredentialProvider(AWSMobileClient.getInstance().getCredentialsProvider());
@@ -1141,6 +1141,7 @@ public class MainActivity extends Activity {
 //            talk.speak("There is no network connection, please connect to a network.");
 //        }
     }
+
 
 
 }

@@ -15,14 +15,15 @@
 
         <com.navigine.naviginesdk.LocationView android:id="@+id/navigation__location_view"
             android:layout_width="fill_parent"
-            android:layout_height="fill_parent"/>
+            android:layout_height="fill_parent">
 
-        <com.amazonaws.mobileconnectors.lex.interactionkit.ui.InteractiveVoiceView
-            android:id="@+id/voiceInterface"
-            layout="@layout/voice_component"
-            android:layout_gravity="bottom|center"
-            android:layout_width="200dp"
-            android:layout_height="200dp"/>
+            <com.amazonaws.mobileconnectors.lex.interactionkit.ui.InteractiveVoiceView
+                android:id="@+id/voiceInterface"
+                layout="@layout/voice_component"
+                android:layout_width="200dp"
+                android:layout_height="200dp"
+                android:layout_gravity="top|center" />
+        </com.navigine.naviginesdk.LocationView>
 
         <TextView android:id="@+id/navigation__info_label"
             android:layout_width="wrap_content"
