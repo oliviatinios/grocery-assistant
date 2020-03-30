@@ -2,9 +2,7 @@ package com.example.groceryassistant;
 
 import android.media.AudioManager;
 import android.media.MediaPlayer;
-import android.os.StrictMode;
 import android.util.Log;
-import android.view.View;
 
 import com.amazonaws.mobile.client.AWSMobileClient;
 import com.amazonaws.services.polly.AmazonPollyPresigningClient;
@@ -20,7 +18,7 @@ import java.util.List;
 
 import static android.content.ContentValues.TAG;
 
-public class VoiceInterface {
+class VoiceInterface {
 
     private List<Voice> voices;
     private AmazonPollyPresigningClient client;
@@ -35,6 +33,7 @@ public class VoiceInterface {
         // Create describe voices request.
         final DescribeVoicesRequest describeVoicesRequest = new DescribeVoicesRequest();
 
+        // HTTP requests must be in separate thread
         Thread thread = new Thread(new Runnable(){
             @Override
             public void run() {
@@ -55,9 +54,10 @@ public class VoiceInterface {
         });
         thread.start();
 
-        // Set up media player
-        setupNewMediaPlayer();
+        while (voices == null) {}   // Ugly wait loop will remove later
 
+        // Set up the initial media player
+        setupNewMediaPlayer();
     }
 
     void speak(String text) {

@@ -6,6 +6,7 @@ import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -18,9 +19,12 @@ import android.graphics.Path;
 import android.graphics.PointF;
 import android.graphics.RectF;
 import android.graphics.Typeface;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.speech.tts.TextToSpeech;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnLayoutChangeListener;
@@ -53,6 +57,9 @@ import com.navigine.naviginesdk.Venue;
 import com.navigine.naviginesdk.Zone;
 
 import java.io.File;
+import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.Calendar;
 import java.util.Locale;
 import java.util.Map;
@@ -157,8 +164,8 @@ public class MainActivity extends Activity {
         };
 
         gui.setListeners(locationListener, layoutListener);
-
         gui.setDisplayDensity(getResources().getDisplayMetrics().density);
+
         nav = new Navigation();
 
         // Setting up device listener
@@ -187,7 +194,10 @@ public class MainActivity extends Activity {
         connectToAws();
         requestAudioPermissions();
 
-        talk = new VoiceInterface();
+        talk = new VoiceInterface();    // Must be called after connectToAws()
+
+        checkConnectivity();
+
     }
 
     @Override public void onDestroy()
@@ -322,8 +332,14 @@ public class MainActivity extends Activity {
     private void handleLongClick(float x, float y)
     {
         Log.d(TAG, String.format(Locale.ENGLISH, "Long click at (%.2f, %.2f)", x, y));
-        makePin(gui.getAbsCoordinates(x, y));
-        cancelVenue();
+//        makePin(gui.getAbsCoordinates(x, y));
+//        cancelVenue();
+
+        talk.speak(String.format("long click at x = %.2f, y = %.2f", x, y));
+
+
+
+
     }
 
     private void handleScroll(float x, float y, boolean byTouchEvent)
@@ -1088,6 +1104,42 @@ public class MainActivity extends Activity {
         voiceView.getViewAdapter()
                 .setAwsRegion(getApplicationContext()
                         .getString(R.string.aws_region));
+    }
+
+    public void checkConnectivity() {
+        // Check if bluetooth is enabled
+        BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        if (mBluetoothAdapter == null) {
+            // Device does not support Bluetooth
+        } else if (!mBluetoothAdapter.isEnabled()) {
+            // Bluetooth is disabled
+            talk.speak("Your bluetooth is disabled, please enable bluetooth.");
+            Log.d(TAG,"Bluetooth appears to be disabled.");
+        } else {
+            // Bluetooth is enabled
+            Log.d(TAG,"Bluetooth appears to be enabled.");
+        }
+
+        // For checking internet connection - app crashes when internet is not connected
+
+//        // Check if there is a network connection
+//        ConnectivityManager connectivityManager =
+//                (ConnectivityManager) getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+//
+//        if (connectivityManager != null) {
+//            NetworkInfo activeNetwork = connectivityManager.getActiveNetworkInfo();
+//            netConnected = (activeNetwork != null) && (activeNetwork.isConnectedOrConnecting());
+//        }
+//
+//        // Give verbal feedback
+//        if (!btConnected && !netConnected) {
+//            talk.speak("Your bluetooth is disabled and there is no network connection, please enable " +
+//                    "bluetooth and connect to a network.");
+//        } else if (!btConnected) {
+//            talk.speak("Your bluetooth is disabled, please enable bluetooth.");
+//        } else if (!netConnected) {
+//            talk.speak("There is no network connection, please connect to a network.");
+//        }
     }
 
 
