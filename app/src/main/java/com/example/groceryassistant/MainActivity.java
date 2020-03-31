@@ -48,13 +48,16 @@ import com.navigine.naviginesdk.LocationPoint;
 import com.navigine.naviginesdk.LocationView;
 import com.navigine.naviginesdk.NavigationThread;
 import com.navigine.naviginesdk.NavigineSDK;
+import com.navigine.naviginesdk.RouteEvent;
 import com.navigine.naviginesdk.RoutePath;
 import com.navigine.naviginesdk.SubLocation;
 import com.navigine.naviginesdk.Venue;
 import com.navigine.naviginesdk.Zone;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -326,6 +329,12 @@ public class MainActivity extends Activity {
         gui.setBackVisibility(View.VISIBLE);
         gui.redrawLocationView();
 
+        // TO DO : Use path array to get the next turn
+        RoutePath path = mDeviceInfo.getPaths().get(0);
+        List<RouteEvent> directions = path.getEvents();
+
+        Log.d("Directions",directions.toString());
+
     }
 
     private void handleLongClick(float x, float y)
@@ -384,8 +393,7 @@ public class MainActivity extends Activity {
 
     private void handleDeviceUpdate(DeviceInfo deviceInfo)
     {
-        // TO DO : Use path array to get the next turn
-        //float l = deviceInfo.getPaths().get(0).getLength();
+
 
         if (!(mTargetPoint == null)) {
 
@@ -837,6 +845,15 @@ public class MainActivity extends Activity {
         if (mDeviceInfo.getPaths() != null && mDeviceInfo.getPaths().size() > 0)
         {
             RoutePath path = mDeviceInfo.getPaths().get(0);
+            List<RouteEvent> directions = path.getEvents();
+            List<Integer> types = new ArrayList<>();
+
+            for (int i = 0; i < directions.size(); i++) {
+                types.add(directions.get(i).getType());
+            }
+            Log.d("Distance:", String.valueOf(directions.get(0).getDistance()));
+            Log.d("Directions",types.toString());
+
             if (path.getPoints().size() >= 2)
             {
                 paint.setColor(solidColor);

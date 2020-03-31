@@ -5,6 +5,7 @@ import com.navigine.naviginesdk.Location;
 import com.navigine.naviginesdk.LocationPoint;
 import com.navigine.naviginesdk.NavigationThread;
 import com.navigine.naviginesdk.NavigineSDK;
+import com.navigine.naviginesdk.RouteEvent;
 import com.navigine.naviginesdk.Zone;
 
 class Navigation {
@@ -67,4 +68,5 @@ class Navigation {
     void setTime(long time) {
         mAdjustTime = time;
     }
+
 }
