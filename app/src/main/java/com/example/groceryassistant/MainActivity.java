@@ -326,6 +326,18 @@ public class MainActivity extends Activity {
         gui.setBackVisibility(View.VISIBLE);
         gui.redrawLocationView();
 
+        // This code is used to test out zones
+        Zone Z = null;
+        for(int i = 0; i < subLoc.getZones().size(); ++i)
+        {
+            Z = subLoc.getZones().get(i);
+            if (Z.contains(mTargetPoint))
+                break;
+        }
+        if (Z!=null) {
+            Log.d(TAG, Z.getName());
+            talk.speak("You are in zone " + Z.getName());
+        }
     }
 
     private void handleLongClick(float x, float y)
