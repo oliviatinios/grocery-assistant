@@ -329,12 +329,6 @@ public class MainActivity extends Activity {
         gui.setBackVisibility(View.VISIBLE);
         gui.redrawLocationView();
 
-        // TO DO : Use path array to get the next turn
-        RoutePath path = mDeviceInfo.getPaths().get(0);
-        List<RouteEvent> directions = path.getEvents();
-
-        Log.d("Directions",directions.toString());
-
     }
 
     private void handleLongClick(float x, float y)
@@ -429,16 +423,11 @@ public class MainActivity extends Activity {
         if (mDeviceInfo.getPaths() != null && mDeviceInfo.getPaths().size() > 0) {
             RoutePath path = mDeviceInfo.getPaths().get(0);
             List<RouteEvent> directions = path.getEvents();
-            List<Integer> types = new ArrayList<>();
-
-            for (int i = 0; i < directions.size(); i++) {
-                types.add(directions.get(i).getType());
-            }
 
             try {
                 float distanceToEvent = directions.get(0).getDistance();
                 if (distanceToEvent == 0.0) {
-                    int turn = types.get(0);
+                    int turn = directions.get(0).getType();
                     Log.d("Turn:", String.valueOf(turn));
                     if (turn == 1) {
                         talk.speak("Turn left");
@@ -1070,7 +1059,7 @@ public class MainActivity extends Activity {
         Item item = mapper.load(Item.class, name);
         Log.d(TAG,item.toString());
         navItem = item;
-        //talk.speak("Calculating route to the " + navItem.getName());
+        talk.speak("Calculating route to the " + navItem.getName());
     }
 
     public void initInteractiveVoiceView(){
