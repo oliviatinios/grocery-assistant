@@ -1065,11 +1065,14 @@ public class MainActivity extends Activity {
                                     }
                                 }
                             };
-                            Thread mythread = new Thread(runnable);
-                            mythread.start();
-                            // TODO Fix loop
-                            while(navItem == null) {}
-
+                            Thread dbthread = new Thread(runnable);
+                            dbthread.start();
+                            // Wait for thread to finish
+                            try {
+                                dbthread.join();
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
                             onNav(navItem.getPositionX(), navItem.getPositionY());
                         }
                     }
