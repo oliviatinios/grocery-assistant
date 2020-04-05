@@ -358,37 +358,37 @@ public class MainActivity extends Activity {
 
     private void handleEnterZone(Zone z)
     {
-        Log.d(TAG, "Enter zone " + z.getName());
-        if (NOTIFICATIONS_ENABLED)
-        {
-            Intent notificationIntent = new Intent(this, NotificationActivity.class);
-            notificationIntent.putExtra("zone_id",    z.getId());
-            notificationIntent.putExtra("zone_name",  z.getName());
-            notificationIntent.putExtra("zone_color", z.getColor());
-            notificationIntent.putExtra("zone_alias", z.getAlias());
-
-            // Setting up a notification
-            Notification.Builder notificationBuilder = new Notification.Builder(this, NOTIFICATION_CHANNEL);
-            notificationBuilder.setContentIntent(PendingIntent.getActivity(this, z.getId(), notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT));
-            notificationBuilder.setContentTitle("New zone");
-            notificationBuilder.setContentText("You have entered zone '" + z.getName() + "'");
-            notificationBuilder.setSmallIcon(R.drawable.elm_logo);
-            notificationBuilder.setAutoCancel(true);
-
-            // Posting a notification
-            NotificationManager notificationManager = (NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
-            notificationManager.notify(z.getId(), notificationBuilder.build());
-        }
+//        Log.d(TAG, "Enter zone " + z.getName());
+//        if (NOTIFICATIONS_ENABLED)
+//        {
+//            Intent notificationIntent = new Intent(this, NotificationActivity.class);
+//            notificationIntent.putExtra("zone_id",    z.getId());
+//            notificationIntent.putExtra("zone_name",  z.getName());
+//            notificationIntent.putExtra("zone_color", z.getColor());
+//            notificationIntent.putExtra("zone_alias", z.getAlias());
+//
+//            // Setting up a notification
+//            Notification.Builder notificationBuilder = new Notification.Builder(this, NOTIFICATION_CHANNEL);
+//            notificationBuilder.setContentIntent(PendingIntent.getActivity(this, z.getId(), notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT));
+//            notificationBuilder.setContentTitle("New zone");
+//            notificationBuilder.setContentText("You have entered zone '" + z.getName() + "'");
+//            notificationBuilder.setSmallIcon(R.drawable.elm_logo);
+//            notificationBuilder.setAutoCancel(true);
+//
+//            // Posting a notification
+//            NotificationManager notificationManager = (NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
+//            notificationManager.notify(z.getId(), notificationBuilder.build());
+//        }
     }
 
     private void handleLeaveZone(Zone z)
     {
-        Log.d(TAG, "Leave zone " + z.getName());
-        if (NOTIFICATIONS_ENABLED)
-        {
-            NotificationManager notificationManager = (NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
-            notificationManager.cancel(z.getId());
-        }
+//        Log.d(TAG, "Leave zone " + z.getName());
+//        if (NOTIFICATIONS_ENABLED)
+//        {
+//            NotificationManager notificationManager = (NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
+//            notificationManager.cancel(z.getId());
+//        }
     }
 
     private void handleDeviceUpdate(DeviceInfo deviceInfo)
@@ -425,6 +425,33 @@ public class MainActivity extends Activity {
         }
 
         mDeviceInfo = deviceInfo;
+
+        if (mDeviceInfo.getPaths() != null && mDeviceInfo.getPaths().size() > 0) {
+            RoutePath path = mDeviceInfo.getPaths().get(0);
+            List<RouteEvent> directions = path.getEvents();
+            List<Integer> types = new ArrayList<>();
+
+            for (int i = 0; i < directions.size(); i++) {
+                types.add(directions.get(i).getType());
+            }
+
+            try {
+                float distanceToEvent = directions.get(0).getDistance();
+                if (distanceToEvent == 0.0) {
+                    int turn = types.get(0);
+                    Log.d("Turn:", String.valueOf(turn));
+                    if (turn == 1) {
+                        talk.speak("Turn left");
+                    } else if (turn == 2) {
+                        talk.speak("Turn right");
+                    }
+                }
+
+            } catch (Throwable e) {
+                talk.speak("Go Straight");
+            }
+        }
+
         if (mDeviceInfo == null)
             return;
 
@@ -845,14 +872,6 @@ public class MainActivity extends Activity {
         if (mDeviceInfo.getPaths() != null && mDeviceInfo.getPaths().size() > 0)
         {
             RoutePath path = mDeviceInfo.getPaths().get(0);
-            List<RouteEvent> directions = path.getEvents();
-            List<Integer> types = new ArrayList<>();
-
-            for (int i = 0; i < directions.size(); i++) {
-                types.add(directions.get(i).getType());
-            }
-            Log.d("Distance:", String.valueOf(directions.get(0).getDistance()));
-            Log.d("Directions",types.toString());
 
             if (path.getPoints().size() >= 2)
             {
@@ -870,6 +889,7 @@ public class MainActivity extends Activity {
                         canvas.drawLine(P1.x, P1.y, Q1.x, Q1.y, paint);
                     }
                 }
+
             }
         }
 
