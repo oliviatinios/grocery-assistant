@@ -1057,7 +1057,6 @@ public class MainActivity extends Activity {
                                 public void run() {
                                     try {
                                         getItem(dynamoDBMapper, shoppingListItem);
-                                        //onNav(navItem.getPositionX(), navItem.getPositionY());
 
                                     }
                                     catch (Throwable t) {
@@ -1074,7 +1073,6 @@ public class MainActivity extends Activity {
                             onNav(navItem.getPositionX(), navItem.getPositionY());
                         }
                     }
-                    //onNav(navItem.getPositionX(), navItem.getPositionY());
                     @Override
                     public void onResponse(Response response) {
                         Log.d(TAG, "User input: " + response.getInputTranscript());
