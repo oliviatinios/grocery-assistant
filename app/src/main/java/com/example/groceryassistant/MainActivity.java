@@ -325,19 +325,6 @@ public class MainActivity extends Activity {
         nav.setTarget(mTargetPoint);
         gui.setBackVisibility(View.VISIBLE);
         gui.redrawLocationView();
-
-        // This code is used to test out zones
-        Zone Z = null;
-        for(int i = 0; i < subLoc.getZones().size(); ++i)
-        {
-            Z = subLoc.getZones().get(i);
-            if (Z.contains(mTargetPoint))
-                break;
-        }
-        if (Z!=null) {
-            Log.d(TAG, Z.getName());
-            talk.speak("You are in zone " + Z.getName());
-        }
     }
 
     private void handleLongClick(float x, float y)
@@ -1040,7 +1027,7 @@ public class MainActivity extends Activity {
         }
     }
 
-    // Reads item from DynamoDB
+    // Read item from DynamoDB
     private void getItem(DynamoDBMapper mapper, String name) throws Exception {
         Item item = mapper.load(Item.class, name);
         Log.d(TAG,item.toString());
@@ -1062,9 +1049,11 @@ public class MainActivity extends Activity {
                                 "Dialog ready for fulfillment:\n\tIntent: %s\n\tSlots: %s",
                                 intent,
                                 slots.toString()));
-                        final String shoppingListItem = slots.get("ShoppingList_Item").toString().toLowerCase();
+
+                        // Handle NavigateToItem intent
                         if (intent.equals("NavigateToItem")) {
-                            Log.d(TAG,"Handling NavigateToItem intent.");
+                            Log.d(TAG,"Handling NavigateToItem intent");
+                            final String shoppingListItem = slots.get("ShoppingList_Item").toString().toLowerCase();
                             Runnable runnable = new Runnable() {
                                 public void run() {
                                     try {
@@ -1087,7 +1076,29 @@ public class MainActivity extends Activity {
                             }
                             onNav(navItem.getPositionX(), navItem.getPositionY());
                         }
+
+                        // Handle GetCurrentLocation intent
+                        if (intent.equals("GetCurrentLocation")) {
+                            Log.d(TAG, "Handling GetCurrentLocation intent");
+                            float x = mDeviceInfo.getX();
+                            float y = mDeviceInfo.getY();
+                            SubLocation subLoc = mLocation.getSubLocations().get(mCurrentSubLocationIndex);
+                            LocationPoint currentLocation  = new LocationPoint(mLocation.getId(), subLoc.getId(), x, y);
+                            Zone Z = null;
+                            for(int i = 0; i < subLoc.getZones().size(); ++i)
+                            {
+                                Z = subLoc.getZones().get(i);
+                                if (Z.contains(currentLocation))
+                                    break;
+                            }
+                            if (Z != null) {
+                                talk.speak("You are currently in " + Z.getName());
+                            } else {
+                                talk.speak("Sorry, I can't get your location right now. Please try again.");
+                            }
+                        }
                     }
+
                     @Override
                     public void onResponse(Response response) {
                         Log.d(TAG, "User input: " + response.getInputTranscript());
