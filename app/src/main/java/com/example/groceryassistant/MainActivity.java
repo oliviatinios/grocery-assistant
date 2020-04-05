@@ -1033,7 +1033,7 @@ public class MainActivity extends Activity {
         Item item = mapper.load(Item.class, name);
         Log.d(TAG,item.toString());
         navItem = item;
-        //talk.speak("Calculating route to the " + navItem.getName());
+        talk.speak("Calculating route to the " + navItem.getName());
     }
 
     public void initInteractiveVoiceView(){
