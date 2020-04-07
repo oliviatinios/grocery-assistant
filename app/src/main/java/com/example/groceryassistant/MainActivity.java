@@ -388,7 +388,6 @@ public class MainActivity extends Activity {
     private void handleDeviceUpdate(DeviceInfo deviceInfo)
     {
 
-
         if (!(mTargetPoint == null)) {
 
             float dx = deviceInfo.getX() - mTargetPoint.getX();
@@ -426,9 +425,10 @@ public class MainActivity extends Activity {
 
             try {
                 float distanceToEvent = directions.get(0).getDistance();
+                Log.d("NAV_INSTRUCTIONS_TEST", String.valueOf(distanceToEvent));
                 if (distanceToEvent == 0.0) {
                     int turn = directions.get(0).getType();
-                    Log.d("Turn:", String.valueOf(turn));
+                    Log.d("NAV_INSTRUCTIONS_TEST", "Turn: " + turn);
                     if (turn == 1) {
                         talk.speak("Turn left");
                     } else if (turn == 2) {
@@ -437,7 +437,8 @@ public class MainActivity extends Activity {
                 }
 
             } catch (Throwable e) {
-                talk.speak("Go Straight");
+                //talk.speak("Go Straight");
+                e.printStackTrace();
             }
         }
 
