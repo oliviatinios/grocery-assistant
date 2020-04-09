@@ -24,6 +24,7 @@ import android.net.NetworkInfo;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
 import android.os.Vibrator;
 import android.speech.tts.TextToSpeech;
 import android.util.Log;
@@ -330,13 +331,17 @@ public class MainActivity extends Activity {
 
     private void handleLongClick(float x, float y)
     {
-        // Vibrate voice recording pattern
         Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
-        long[] pattern = {0,100,50,100};
+        long[] pattern = {0,100,50,100}; // Vibration patter for voice interface recording
         v.vibrate(pattern, -1);
 
-        // Perform click on voice interface
-        findViewById(R.id.voiceInterface).performClick();
+        final Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() { // Wait 300ms for vibration to finish
+                findViewById(R.id.voiceInterface).performClick();
+            }
+        }, 300);
 
         Log.d(TAG, String.format(Locale.ENGLISH, "Long click at (%.2f, %.2f)", x, y));
     }
@@ -1107,18 +1112,18 @@ public class MainActivity extends Activity {
     }
 
     public void checkConnectivity() {
-        // Check if bluetooth is enabled
-        BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        if (mBluetoothAdapter == null) {
-            // Device does not support Bluetooth
-        } else if (!mBluetoothAdapter.isEnabled()) {
-            // Bluetooth is disabled
-            talk.speak("Your bluetooth is disabled, please enable bluetooth.");
-            Log.d(TAG,"Bluetooth appears to be disabled.");
-        } else {
-            // Bluetooth is enabled
-            Log.d(TAG,"Bluetooth appears to be enabled.");
-        }
+            // Check if bluetooth is enabled
+            BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+            if (mBluetoothAdapter == null) {
+                // Device does not support Bluetooth
+            } else if (!mBluetoothAdapter.isEnabled()) {
+                // Bluetooth is disabled
+                talk.speak("Your bluetooth is disabled, please enable bluetooth.");
+                Log.d(TAG,"Bluetooth appears to be disabled.");
+            } else {
+                // Bluetooth is enabled
+                Log.d(TAG,"Bluetooth appears to be enabled.");
+            }
 
         // For checking internet connection - app crashes when internet is not connected
 
