@@ -326,7 +326,6 @@ public class MainActivity extends Activity {
         nav.setTarget(mTargetPoint);
         gui.setBackVisibility(View.VISIBLE);
         gui.redrawLocationView();
-
     }
 
     private void handleLongClick(float x, float y)
@@ -1039,12 +1038,12 @@ public class MainActivity extends Activity {
         }
     }
 
-    // Reads item from DynamoDB
+    // Read item from DynamoDB
     private void getItem(DynamoDBMapper mapper, String name) throws Exception {
         Item item = mapper.load(Item.class, name);
         Log.d(TAG,item.toString());
         navItem = item;
-        //talk.speak("Calculating route to the " + navItem.getName());
+        talk.speak("Calculating route to the " + navItem.getName());
     }
 
     public void initInteractiveVoiceView(){
@@ -1061,15 +1060,18 @@ public class MainActivity extends Activity {
                                 "Dialog ready for fulfillment:\n\tIntent: %s\n\tSlots: %s",
                                 intent,
                                 slots.toString()));
-                        final String shoppingListItem = slots.get("ShoppingList_Item").toString().toLowerCase();
+
+                        // Handle NavigateToItem intent
                         if (intent.equals("NavigateToItem")) {
-                            Log.d(TAG,"Handling NavigateToItem intent.");
+                            Log.d(TAG,"Handling NavigateToItem intent");
+                            // Get shopping list item from slots
+                            final String shoppingListItem = slots.get("ShoppingList_Item").toString().toLowerCase();
+                            // Create new thread to interact with DynamoDB
                             Runnable runnable = new Runnable() {
                                 public void run() {
                                     try {
+                                        // Get item from dynamoDB table based on keyword from user
                                         getItem(dynamoDBMapper, shoppingListItem);
-                                        //onNav(navItem.getPositionX(), navItem.getPositionY());
-
                                     }
                                     catch (Throwable t) {
                                         Log.d(TAG,"Could not retrieve item from DynamoDB: " + t);
@@ -1077,15 +1079,44 @@ public class MainActivity extends Activity {
                                     }
                                 }
                             };
-                            Thread mythread = new Thread(runnable);
-                            mythread.start();
-                            // TODO Fix loop
-                            while(navItem == null) {}
-
+                            Thread dbthread = new Thread(runnable);
+                            dbthread.start();
+                            // Wait for database thread to finish before continuing in main thread
+                            try {
+                                dbthread.join();
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                            // Draw route to requested item
                             onNav(navItem.getPositionX(), navItem.getPositionY());
                         }
+
+                        // Handle GetCurrentLocation intent
+                        if (intent.equals("GetCurrentLocation")) {
+                            Log.d(TAG, "Handling GetCurrentLocation intent");
+                            // Get current location of user's device
+                            float x = mDeviceInfo.getX();
+                            float y = mDeviceInfo.getY();
+                            SubLocation subLoc = mLocation.getSubLocations().get(mCurrentSubLocationIndex);
+                            LocationPoint currentLocation  = new LocationPoint(mLocation.getId(), subLoc.getId(), x, y);
+                            // Create zone
+                            Zone Z = null;
+                            for(int i = 0; i < subLoc.getZones().size(); ++i)
+                            {
+                                Z = subLoc.getZones().get(i);
+                                // Look for a zone that contains the current location of the user
+                                if (Z.contains(currentLocation))
+                                    break;
+                            }
+                            // Tell the user what zone they are in
+                            if (Z != null) {
+                                talk.speak("You are currently in " + Z.getName());
+                            } else {
+                                talk.speak("Sorry, I can't get your location right now. Please try again.");
+                            }
+                        }
                     }
-                    //onNav(navItem.getPositionX(), navItem.getPositionY());
+
                     @Override
                     public void onResponse(Response response) {
                         Log.d(TAG, "User input: " + response.getInputTranscript());
