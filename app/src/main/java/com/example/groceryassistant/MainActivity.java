@@ -1115,6 +1115,33 @@ public class MainActivity extends Activity {
                                 talk.speak("Sorry, I can't get your location right now. Please try again.");
                             }
                         }
+
+                        // Handle CancelRoute intent
+                        if (intent.equals("CancelRoute")) {
+                            Log.d(TAG, "Handling CancelRoute intent");
+                            // check if Navigation object exists
+                            if (!nav.isNull()) {
+                                // Check if target point exists
+                                if (mTargetPoint != null) {
+                                    // Get rid of current route
+                                    mTargetPoint = null;
+                                    mTargetVenue = null;
+                                    mPinPoint = null;
+                                    mPinPointRect = null;
+                                    nav.cancelTargets();
+                                    gui.setBackVisibility(View.GONE);
+                                    gui.redrawLocationView();
+                                    // Inform user that route has been cancelled
+                                    talk.speak("Route cancelled.");
+                                } else {
+                                    // Inform user that no route exists
+                                    talk.speak("You currently have no route. To begin navigation, " +
+                                            "press and hold the screen and tell me where you want to go.");
+                                }
+                            } else {
+                                talk.speak("Sorry, I couldn't complete your request. Please try again.");
+                            }
+                        }
                     }
 
                     @Override
