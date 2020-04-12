@@ -200,6 +200,8 @@ public class MainActivity extends Activity {
 
         checkConnectivity();
 
+        talk.speak("Welcome to Grocery Assistant. You can tap anywhere on the screen to talk to me.");
+
     }
 
     @Override public void onDestroy()
