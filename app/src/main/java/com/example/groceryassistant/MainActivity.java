@@ -1074,6 +1074,7 @@ public class MainActivity extends Activity {
                                         getItem(dynamoDBMapper, shoppingListItem);
                                     }
                                     catch (Throwable t) {
+                                        navItem = null;
                                         Log.d(TAG,"Could not retrieve item from DynamoDB: " + t);
                                         t.printStackTrace();
                                     }
@@ -1087,8 +1088,13 @@ public class MainActivity extends Activity {
                             } catch (InterruptedException e) {
                                 e.printStackTrace();
                             }
-                            // Draw route to requested item
-                            onNav(navItem.getPositionX(), navItem.getPositionY());
+                            // Check if item was retrieved from database
+                            if (navItem == null) {
+                                talk.speak(shoppingListItem + " is currently not in stock. Please try a different item.");
+                            } else {
+                                // Draw route to requested item
+                                onNav(navItem.getPositionX(), navItem.getPositionY());
+                            }
                         }
 
                         // Handle GetCurrentLocation intent
