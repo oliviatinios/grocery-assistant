@@ -200,7 +200,7 @@ public class MainActivity extends Activity {
 
         checkConnectivity();
 
-        talk.speak("Welcome to Grocery Assistant. You can tap anywhere on the screen to talk to me.");
+        talk.speak("Welcome to Grocery Assistant. You can tap and hold anywhere on the screen to talk to me.");
 
     }
 
