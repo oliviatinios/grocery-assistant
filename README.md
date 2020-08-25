@@ -22,7 +22,7 @@ Users communicate with the application through a voice interface. Since our appl
 ### Bluetooth Beacons, Triangulation and Pathfinding
 The navigation feature was implemented using bluetooth beacons. For our prototype of the application, 10 beacons were installed on the walls of an empty room. Each beacon emits a signal which can be picked up by the user's mobile device. In a more realistic scenario, more testing would need to be done to see how obstacles in a grocery store, such as large shelving units, would interact with the signals. Using triangulation, the position of the user's device can be located and the application will determine a path to the requested item which avoids known obstacles in the grocery store. The navigation features described above were implemented using the [Navigine SDK](https://github.com/Navigine/Android-SDK) for Android.
 
-![Image of a bluetooth beacon](/images/beacon.jpg)
+![Image of a bluetooth beacon](/beacon.png)
 
 ### Database
 Our application’s data is stored in a NoSQL database which was created using [Amazon DynamoDB](https://aws.amazon.com/dynamodb/). We have two tables: one which stores a list of all the items in the grocery store and the coordinates of their location, and another table which stores the user’s shopping list.
