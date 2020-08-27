@@ -8,7 +8,7 @@ As of now, there aren't many options for visually impaired individuals when it c
 ## Solution
 Our solution is a mobile application whcih assists with navigation in the grocery store. The application communicates with the user entirely through voice and vibrations.
 
-![Interface](/media/interface.png)
+<img src="/media/interface.png" width="400">
 
 ## How It Works
 - Step 1: Through voice commands, the user requests directions to an item in the grocery store.
@@ -24,9 +24,7 @@ Users communicate with the application through a voice interface. To implement t
 ### Bluetooth Beacons, Triangulation and Pathfinding
 The navigation feature was implemented using bluetooth beacons. For our prototype of the application, 10 beacons were installed on the walls of an empty room. Each beacon emits a signal which can be picked up by the user's mobile device. In a more realistic scenario, more testing would need to be done to see how obstacles in a grocery store, such as large shelving units, would interact with the signals. Using triangulation, the position of the user's device can be located and the application will determine a path to the requested item which avoids known obstacles in the grocery store. The navigation features described above were implemented using the [Navigine SDK](https://github.com/Navigine/Android-SDK) for Android.
 
-![Bluetooth beacon](/media/beacon.png)\
-![Triagulation](/media/triangulation.png)\
-![Pathfinding](/media/pathfinding.png)
+![Bluetooth beacon](/media/images/beacon.png)
 
 ### Database
 Our application’s data is stored in a NoSQL database which was created using [Amazon DynamoDB](https://aws.amazon.com/dynamodb/). We have two tables: one which stores a list of all the items in the grocery store and the coordinates of their location, and another table which stores the user’s shopping list. A user can create and update their shopping list through voice commands.
@@ -35,4 +33,4 @@ Our application’s data is stored in a NoSQL database which was created using [
 The application was developed using Java and Android Studio.
 
 ## Demo
-Go [here](/media) to see demo videos.
+Go [here](/media/demo-videos) to see demo videos.
