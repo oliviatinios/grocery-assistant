@@ -8,7 +8,7 @@ As of now, there aren't many options for visually impaired individuals when it c
 ## Solution
 Our solution is a mobile application whcih assists with navigation in the grocery store. The application communicates with the user entirely through voice and vibrations.
 
-<img src="/media/interface.png" width="400">
+<img src="/media/images/interface.png" width="400">
 
 ## How It Works
 - Step 1: Through voice commands, the user requests directions to an item in the grocery store.
