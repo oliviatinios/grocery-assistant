@@ -33,4 +33,4 @@ Our application’s data is stored in a NoSQL database which was created using [
 The application was developed using Java and Android Studio.
 
 ## Demo
-Go [here](/media/demo-videos) to see demo videos.
+Go [here](/media/videos) to see demo videos.
